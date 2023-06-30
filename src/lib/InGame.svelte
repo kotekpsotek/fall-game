@@ -5,7 +5,7 @@
 
     let gameContext: HTMLDivElement;
 
-    interface SpawnedHeart { timeMs: number }
+    interface SpawnedHeart { timeMs: number, image: HTMLImageElement }
     let heartsSpawned: SpawnedHeart[] = [];
 
     /** Add image with heart to screen */
@@ -24,26 +24,45 @@
             gameContext.appendChild(image);
             
             // Add new heart to records of hearts lisy
-            const objSpwnd = { timeMs: Date.now() };
+            const objSpwnd = { timeMs: Date.now(), image };
             heartsSpawned.push(objSpwnd);
 
             // Capture click on spawned heart on Screen
-            image.onclick = clickOnHeart;
+            image.onclick = clickOnHeart(heartsSpawned.length - 1);
         }
         else {
-            // Emit event due to overflow
+            // Emit event due to rich maximum hearts amount on screen
             const ev = new Event("hearts-overflow-met");
             window.dispatchEvent(ev);
         }
     }
 
     /** When user click on spawned heart */
-    function clickOnHeart() {
-        //TODO: ..
+    function clickOnHeart(heartRecordId: number) {
+        return (ev: Event) => {
+            // Only when list of records isn't empty
+            if (heartRecordId < heartsSpawned.length) {
+                // Calculations of time
+                const clickMs = Date.now();
+                const { timeMs: recordMs, image } = heartsSpawned[heartRecordId];
+    
+                // Calculations of points to assign for user
+                const diffMs = clickMs - recordMs;
+                const calc = maximumPointsPerCatch - (diffMs * pointFor1msCatchDelay);
+                userPoints += calc > 0 ? calc : minimumPointsPerCatch;
+
+                // Remove clicked image
+                image.remove();
+            }
+        }
     }
 
     let newAdditionPeriodMs = 100;
     let limitHeartsSpawning = 100;
+    let maximumPointsPerCatch = 1000;
+    let minimumPointsPerCatch = 10;
+    let pointFor1msCatchDelay = 1;
+    let userPoints = 0;
 
     // When application was mounted
     onMount(() => {
@@ -51,7 +70,7 @@
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
 
         // Clear screen and hearts records from user screen
-        window.addEventListener("hearts-overflow-met", () => {
+        window.addEventListener("hearts-overflow-met", async () => {
             // Clear addition loop
             clearInterval(int);
             
@@ -60,6 +79,11 @@
 
             // Clear user screen
             gameContext.innerHTML = "";
+
+            // Display User points, Add it for "games records" and clear it
+            console.log("Your points: ", userPoints);
+            await invoke("game_end", { userPoints }); // Add points
+            userPoints = 0;
         });
 
         // Spawn initial interval
