@@ -2,6 +2,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { invoke } from "@tauri-apps/api";
+    import PointsBadge from "./PointsBadge.svelte";
 
     let gameContext: HTMLDivElement;
 
@@ -91,6 +92,7 @@
     });
 </script>
 
+<PointsBadge {userPoints}/>
 <div class="in-game" bind:this="{gameContext}"></div>
 
 <style>
