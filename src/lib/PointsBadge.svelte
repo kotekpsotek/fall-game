@@ -18,15 +18,15 @@
     }
     
     .pnts {
+        position: relative;
         display: flex;
         justify-content: center;
         column-gap: 10px;
-        z-index: 10;    
+        font-size: 25px;
     }
     
     .points {
         color: white;
         font-weight: 600;
-        text-decoration: underline solid white;
     }
 </style>

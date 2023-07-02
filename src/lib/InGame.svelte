@@ -22,6 +22,7 @@
             image.style.position = "absolute";
             image.style.top = pos_height + "px"; 
             image.style.right = pos_width + "px";
+            image.style.zIndex = "10";
             gameContext.appendChild(image);
             
             // Add new heart to records of hearts lisy
@@ -58,7 +59,7 @@
         }
     }
 
-    let newAdditionPeriodMs = 100;
+    let newAdditionPeriodMs = 500;
     let limitHeartsSpawning = 100;
     let maximumPointsPerCatch = 1000;
     let minimumPointsPerCatch = 10;
@@ -99,7 +100,6 @@
     .in-game {
         width: 150vw;
         height: 150vh;
-        background-color: rgb(243, 147, 164);
         overflow: auto;
     }
 </style>
