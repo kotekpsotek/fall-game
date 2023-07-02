@@ -1,9 +1,10 @@
 <!-- When user is actually playing in game -->
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
     import { invoke } from "@tauri-apps/api";
     import PointsBadge from "./PointsBadge.svelte";
 
+    const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
 
     interface SpawnedHeart { timeMs: number, image: HTMLImageElement }
@@ -83,9 +84,11 @@
             gameContext.innerHTML = "";
 
             // Display User points, Add it for "games records" and clear it
-            console.log("Your points: ", userPoints);
             await invoke("game_end", { userPoints }); // Add points
             userPoints = 0;
+
+            // Emit that user end game
+            disp("end");
         });
 
         // Spawn initial interval
