@@ -1,42 +1,61 @@
 <script lang="ts">
     import { ConnectionSignalOff } from "carbon-icons-svelte";
-    import { spotifyInitializeUserAuthentication } from "$lib/api/spotify";
+    import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas } from "$lib/api/spotify";
+    import Spotify from "$lib/MusicInterfaces/Spotify.svelte";
     
-    let interfaceElement: HTMLDivElement;
+    // Determine what kind of music interface user is displaying currently
+    let displayPickuMusicMenu: "spotify" | undefined;
 
     function choosenMusicOption(option: "spotify") {
         switch(option) {
             case "spotify":
-                // Initialise user authentication action
-                spotifyInitializeUserAuthentication();
+                const nowTime = Date.now();
+                const expirationTime = $spotifyApiAuthDatas.establishedInMs + $spotifyApiAuthDatas.expires_inS * 1000;
+
+                // Reauthenticate spotify auth datas when these datas don't exists or are expired
+                if (!Object.keys($spotifyApiAuthDatas).length || nowTime >= expirationTime) {
+                    // Initialise user authentication action
+                    spotifyInitializeUserAuthentication();
+                } 
+                else {
+                    // Display Spotify Pick Music menu
+                    displayPickuMusicMenu = "spotify";
+                };
             break;
 
             default:
                 throw new Error("Unsupported Music Option");
         }
+
     }
 </script>
 
 <div class="music-interface-content">
     <!-- Background -->
-    <div class="music-interface" bind:this={interfaceElement}>
-        <!-- Source element with interface -->
-        <h2>Music Menu</h2>
-        <div class="music-options">
-            <button id="spotify" on:click={ev => choosenMusicOption("spotify")}>
-                <img src="/spotify-color-analog.png" alt=""> 
-                <p>Apply from <span>Spotify</span></p>
-                {#if !document.body.isConnected}
-                    <div class="not-connected">
-                        <p>Turn on network connection</p>
-                        <div class="no-connection-sign">
-                            <ConnectionSignalOff fill="white"/>
-                        </div>
-                    </div>
-                {/if}
-            </button>
+        <div class="music-interface">
+            <!-- Source element with interface -->
+            {#if !displayPickuMusicMenu}
+                <!-- Display pickup from source interface -->
+                <h2>Music Menu</h2>
+                <div class="music-options">
+                    <button id="spotify" on:click={ev => choosenMusicOption("spotify")}>
+                        <img src="/spotify-color-analog.png" alt=""> 
+                        <p>Apply from <span>Spotify</span></p>
+                        {#if !document.body.isConnected}
+                            <div class="not-connected">
+                                <p>Turn on network connection</p>
+                                <div class="no-connection-sign">
+                                    <ConnectionSignalOff fill="white"/>
+                                </div>
+                            </div>
+                        {/if}
+                    </button>
+                </div>
+            {:else if displayPickuMusicMenu == "spotify"}
+                <!-- Display pickup music from 'Spotify' interface -->
+                <Spotify/>
+            {/if}
         </div>
-    </div>  
 </div>
 
 <style>
