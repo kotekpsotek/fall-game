@@ -33,7 +33,8 @@
                     $spotifyApiAuthDatas.expires_inS = ($spotifyApiAuthDatas as any).expires_in;
                     delete ($spotifyApiAuthDatas as any).expires_in;
 
-                    console.log($spotifyApiAuthDatas)
+                    // Move page again to 'root' directory
+                    window.location.replace("/");
                 }
                 else console.log("Cannot obtain authtoken");
             })             

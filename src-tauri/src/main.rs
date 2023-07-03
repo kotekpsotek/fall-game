@@ -8,6 +8,8 @@ use types::{Games, GameRecord};
 use std::fs;
 
 mod types;
+#[path ="./commands/main.rs"]
+mod commands_src;
 
 /** Safe border for spawn hearts into user screen view */
 const SAFE_BORDER_SIZE: u16 = 300;
@@ -50,8 +52,10 @@ fn game_end(userPoints: u32) -> Result<(), ()> {
 }
 
 fn main() {
+  use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas };
+  
   tauri::Builder::default()
-    .invoke_handler(generate_handler![hello_to_you, get_coords, game_end])
+    .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
