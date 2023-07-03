@@ -1,17 +1,14 @@
 <script lang="ts">
-    // import 
+    import { ConnectionSignalOff } from "carbon-icons-svelte";
+    import { spotifyInitializeUserAuthentication } from "$lib/api/spotify";
+    
     let interfaceElement: HTMLDivElement;
-
-    class SpotifySongPlayer {
-        constructor() {
-
-        }
-    }
 
     function choosenMusicOption(option: "spotify") {
         switch(option) {
             case "spotify":
-
+                // Initialise user authentication action
+                spotifyInitializeUserAuthentication();
             break;
 
             default:

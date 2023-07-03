@@ -1,9 +1,45 @@
 <script lang="ts">
     import { Music, Close, Play, Pause } from "carbon-icons-svelte";
+    import { page } from "$app/stores";
+    import { spotifyApiAuthDatas } from "$lib/api/spotify";
     
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
     import MusicPickMenu from "$lib/MusicPickMenu.svelte";
+
+    // Make next steps to authenticate user in 'Spotify API'
+    const url = new URL(document.URL);
+    if (url.search.length) {
+        const callback = url.searchParams.get("callback");
+        const code = url.searchParams.get("code");
+
+        if (callback == "spotify" && code) {
+            // Obtain authtoken now
+            fetch("https://accounts.spotify.com/api/token", {
+                method: "POST",
+                headers: {
+                    "Authorization": $page.data.authSpHeader,
+                    "Content-Type": "application/x-www-form-urlencoded"   
+                },
+                body: $page.data.requestBody // Body data are encoded in MIME format "application/x-www-form-urlencoded"
+            })
+            .then(async resp => {
+                if (resp.status == 200) {
+                    // Extract and store aut datas
+                    const body = await resp.json();
+                    $spotifyApiAuthDatas = body;
+                    $spotifyApiAuthDatas.establishedInMs = Date.now();
+
+                    $spotifyApiAuthDatas.expires_inS = ($spotifyApiAuthDatas as any).expires_in;
+                    delete ($spotifyApiAuthDatas as any).expires_in;
+
+                    console.log($spotifyApiAuthDatas)
+                }
+                else console.log("Cannot obtain authtoken");
+            })             
+        }
+        else throw "Unsupported callback type";
+    }
 
     type ToDisplay = { status: "quick game" | null, changeStatus: (to: ToDisplay["status"]) => void };
 
