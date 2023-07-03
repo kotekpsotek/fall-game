@@ -29,6 +29,14 @@
             <button id="spotify" on:click={ev => choosenMusicOption("spotify")}>
                 <img src="/spotify-color-analog.png" alt=""> 
                 <p>Apply from <span>Spotify</span></p>
+                {#if !document.body.isConnected}
+                    <div class="not-connected">
+                        <p>Turn on network connection</p>
+                        <div class="no-connection-sign">
+                            <ConnectionSignalOff fill="white"/>
+                        </div>
+                    </div>
+                {/if}
             </button>
         </div>
     </div>  
@@ -71,6 +79,7 @@
     }
 
     .music-options :is(button) {
+        position: relative;
         width: 100%;
         display: flex;
         align-items: center;
@@ -79,6 +88,7 @@
         border: solid 1px transparent;
         border-radius: 4px;
         cursor: pointer;
+        overflow: hidden;
     }
 
     .music-options :is(button > img) {
@@ -101,5 +111,33 @@
 
     button#spotify span {
         color: #1DB954;
+    }
+
+    .not-connected {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .not-connected p {
+        color: white;
+    }
+
+    .not-connected > .no-connection-sign {
+        position: absolute;
+        top: -8px;
+        right: -12px;
+        width: 30px;
+        height: 30px;
+        padding: 2px;
+        border-radius: 50%;
+        background-color: red;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
     }
 </style>
