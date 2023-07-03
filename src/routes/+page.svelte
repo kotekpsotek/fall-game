@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Music, Play, Pause } from "carbon-icons-svelte";
+    import { Music, Close, Play, Pause } from "carbon-icons-svelte";
     
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
@@ -16,18 +16,33 @@
     };
 
     /** Display menu to pick music when user click on "Music" button/html layout element */
+    let musicMenuOpen = false;
+    let musicMenuComponent: MusicPickMenu;
     function displayMusicMenu() {
-        const menu = new MusicPickMenu({
-            target: document.body
-        });
-
-        // Listen events
-        // TODO:
+        if (musicMenuOpen) {
+            // Closing music menu
+            musicMenuComponent?.$destroy();
+            musicMenuOpen = false;
+        } else {
+            // Crearting menu
+            musicMenuOpen = true;
+    
+            musicMenuComponent = new MusicPickMenu({
+                target: document.body
+            })
+    
+            // Listen events
+            // TODO:
+        }
     }
 </script>
 
 <button class="music-button" on:click={displayMusicMenu} title="Music">
-    <Music size={24} fill="white"/>
+    {#if !musicMenuOpen}
+        <Music size={24} fill="white"/>
+    {:else}
+        <Close size={27} fill="white"/>
+    {/if}
 </button>
 
 {#if toDisplay.status == "quick game"}
@@ -53,6 +68,7 @@
         border-radius: 50%;
         overflow: hidden !important;
         cursor: pointer;
+        z-index: 2;
     }
     
     .app-layout-menu {

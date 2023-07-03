@@ -1,0 +1,105 @@
+<script lang="ts">
+    // import 
+    let interfaceElement: HTMLDivElement;
+
+    class SpotifySongPlayer {
+        constructor() {
+
+        }
+    }
+
+    function choosenMusicOption(option: "spotify") {
+        switch(option) {
+            case "spotify":
+
+            break;
+
+            default:
+                throw new Error("Unsupported Music Option");
+        }
+    }
+</script>
+
+<div class="music-interface-content">
+    <!-- Background -->
+    <div class="music-interface" bind:this={interfaceElement}>
+        <!-- Source element with interface -->
+        <h2>Music Menu</h2>
+        <div class="music-options">
+            <button id="spotify" on:click={ev => choosenMusicOption("spotify")}>
+                <img src="/spotify-color-analog.png" alt=""> 
+                <p>Apply from <span>Spotify</span></p>
+            </button>
+        </div>
+    </div>  
+</div>
+
+<style>
+    .music-interface-content {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .music-interface {
+        min-width: 350px;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        row-gap: 8px;
+        padding: 5px;
+        background-color: rgb(139, 199, 252);
+        border-radius: 4px;
+    }
+
+    h2 {
+        color: white;
+    }
+
+    .music-options {
+        width: 95%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .music-options :is(button) {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        column-gap: 10px;
+        border: solid 1px transparent;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .music-options :is(button > img) {
+        width: 30px;
+        height: 30px;
+    }
+
+    .music-options :is(button > p) {
+        font-size: 16px;
+    }
+
+    .music-options :is(button > p span) {
+        font-weight: 600;
+    }
+
+    button#spotify {
+        background-color: white;
+        border-color: #1DB954;
+    }
+
+    button#spotify span {
+        color: #1DB954;
+    }
+</style>
