@@ -8,7 +8,7 @@ export const load = ({ url, request }) => {
             {
                 response_type: "code",
                 client_id: SPOTIFY_CLIENT_ID,
-                scope: "user-read-private user-read-email",
+                scope: "user-read-private user-read-email playlist-read-private",
                 redirect_uri: url.origin + "?callback=spotify",
                 state: randomBytes(16).toString("hex")
             }

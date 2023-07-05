@@ -63,14 +63,32 @@ export interface UserProfileData {
     /** User id */
     id: string,
     /** User profile images when user attached other profile image/s regards to default */
-    images: { href: string, height: number, width: number }[],
+    images: { url: string, height: number, width: number }[],
     // + other keys not depleted by UserProfileData type shape
+}
+
+/** Contains datas about user playlists */
+export interface UserPlaylistDatas {
+    /** Name of playlist */
+    /** List of user playlist. Each playlist is represented by independent object located on list */
+    items: { 
+        /** Identifier of playlist */
+        id: string,
+        /** Name of playlist */
+        name: string,
+        /** Spotify identifier of playlist */
+        uri: string 
+        /** images of playlist in descending dimensions ration. Images list can be empty or carry up to 3 images */
+        images: { height: number, width: number, url: string }[],
+        /** Whether playlist is public */
+        public: boolean
+    }[]
 }
 
 /** Get Spotify user datas */
 export class SpotifyApi {
     /** Abbreviation for making rest calls towards Spotify API */
-    private static async makeCall(uri: string, restMethod: "GET" | "POST") {
+    private static async makeCall(uri: string, restMethod: "GET" | "POST", body?: any, otherHeaders?: HeadersInit) {
         // Obtain user Auth Datas from Auth Result storage
         const userAuthDatas = await new Promise<SpotifyAPIAuthData>((res, rej) => {
             spotifyApiAuthDatas.update(uAuth => {
@@ -83,8 +101,10 @@ export class SpotifyApi {
         return fetch(uri, {
             method: restMethod,
             headers: {
-                "Authorization": 'Bearer ' + userAuthDatas.access_token
-            }
+                "Authorization": 'Bearer ' + userAuthDatas.access_token,
+                ...otherHeaders
+            },
+            body
         })
     } 
     
@@ -103,6 +123,24 @@ export class SpotifyApi {
 
             // When error return failure cause
             return Promise.reject("Couldn't obtain profile data");
+        }
+    }
+
+    /** Obtain list of user playlist maximum up to 50 per one call to offset (next 50 will be avaiable by changing offset from 0 to 1) */
+    static async currentUserPlaylists(offset = 0) {
+        const call = await SpotifyApi.makeCall(`https://api.spotify.com/v1/me/playlists?offset=${offset}&limit=${50}`, "GET");
+
+        if (call.status == 200) {
+            const playlistDatas: UserPlaylistDatas = await call.json();
+            return Promise.resolve(playlistDatas);
+        }
+        else {
+            // When error log it content to console
+            const stat = await call.json();
+            console.log(stat);
+
+            // When error return failure cause
+            return Promise.reject("Couldn't obtain playlists data");
         }
     }
 }
