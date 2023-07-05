@@ -55,3 +55,54 @@ export const spotifyApiAuthDatas = (() => {
         ...store_wr
     }
 })();
+
+/** Contains data about user himself profile */
+export interface UserProfileData {
+    /** Spotify user id */
+    display_name: string,
+    /** User id */
+    id: string,
+    /** User profile images when user attached other profile image/s regards to default */
+    images: { href: string, height: number, width: number }[],
+    // + other keys not depleted by UserProfileData type shape
+}
+
+/** Get Spotify user datas */
+export class SpotifyApi {
+    /** Abbreviation for making rest calls towards Spotify API */
+    private static async makeCall(uri: string, restMethod: "GET" | "POST") {
+        // Obtain user Auth Datas from Auth Result storage
+        const userAuthDatas = await new Promise<SpotifyAPIAuthData>((res, rej) => {
+            spotifyApiAuthDatas.update(uAuth => {
+                res(uAuth);
+                return uAuth;
+            })
+        });
+
+        // Make REST HTTP call and return it result
+        return fetch(uri, {
+            method: restMethod,
+            headers: {
+                "Authorization": 'Bearer ' + userAuthDatas.access_token
+            }
+        })
+    } 
+    
+    /** Obtain current user (**authenticated user**) profile informations */
+    static async currentUserProfile() {
+        const call = await SpotifyApi.makeCall("https://api.spotify.com/v1/me", "GET");
+
+        if (call.status == 200) {
+            const data: UserProfileData = await call.json();
+            return Promise.resolve(data);
+        }
+        else {
+            // When error log it content to console
+            const stat = await call.json();
+            console.log(stat);
+
+            // When error return failure cause
+            return Promise.reject("Couldn't obtain profile data");
+        }
+    }
+}
