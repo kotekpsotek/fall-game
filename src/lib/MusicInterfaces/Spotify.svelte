@@ -1,14 +1,17 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { SpotifyApi, type UserProfileData } from "$lib/api/spotify";
-    import { UserAvatarFilledAlt, ArrowLeft } from "carbon-icons-svelte";
+    import { SpotifyApi, type UserProfileData, type UserPlaylistDatas } from "$lib/api/spotify";
+    import { UserAvatarFilledAlt, ArrowLeft, Playlist, PlayFilled } from "carbon-icons-svelte";
 
     const dsp = createEventDispatcher();
     
     let userData: UserProfileData | undefined;
+    let playListDatas: UserPlaylistDatas | undefined;
 
     onMount(async () => {
         userData = await SpotifyApi.currentUserProfile();
+        playListDatas = await SpotifyApi.currentUserPlaylists();
+        console.log(playListDatas)
     });
 </script>
 
@@ -28,15 +31,43 @@
                 <p id="user-name">{userData.display_name}</p>
                 <div class="profile">
                     {#if userData.images.length}
-                        <img src="{userData.images[0].href}" alt="">
+                        <img src="{userData.images[0].url}" alt="">
                     {:else}
                         <UserAvatarFilledAlt size={28} fill="#1DB954"/>
                     {/if}
                 </div>
             </div>
         </div>
-        <div class="albums-list">
-           <!-- TODO: --> 
+        <div class="albums-list" class:no-playlists={!playListDatas?.items.length}>
+            {#if playListDatas?.items.length}
+                {#each playListDatas.items as playlist, i}
+                    <div class="playlist" data-spotify-uri="{playlist.uri}">
+                        <div class="playlist-images">
+                            {#if playlist.images.length}
+                                <!-- TODO: Add support for up to 3 images as playlist image -->
+                                <img src="{playlist.images[0].url}" alt="">
+                                <!-- {#each playlist.images as { url }}
+                                    <img src="{url}" alt="">
+                                {/each} -->
+                            {:else}
+                                <div class="no-images">
+                                    <Playlist size={32}/>
+                                </div>
+                            {/if}
+                        </div>
+                        <div class="name">
+                            <p>{playlist.name}</p>
+                        </div>
+                        <div class="actions">
+                            <button id="play">
+                                <PlayFilled size={28} fill="black"/>
+                            </button>
+                        </div>
+                    </div>
+                {/each}
+            {:else}
+                <p>You haven't got any playlist</p>
+            {/if}
         </div>
     </div>
 {/if}
@@ -99,5 +130,88 @@
     .user-profile img {
         width: 28px;
         height: 28px;
+        border-radius: 50%;
+    }
+
+    div.albums-list.no-playlists {
+        height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    div.albums-list {
+        padding-top: 10px;
+        display: flex;
+        flex-direction: column;
+        row-gap: 5px;
+    }
+
+    div.albums-list > .playlist {
+        width: 100%;
+        height: 75px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: whitesmoke;
+        border-radius: 4px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all linear 100ms;
+        border: solid 1px transparent;
+    }
+
+    .playlist > .playlist-images {
+        width: 75px;
+        height: 75px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .playlist > .playlist-images img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .playlist > .playlist-images .no-images {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .playlist > .name {
+        color: black;
+        height: 100%;
+        width: calc(90% - 75px * 2);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .playlist > .actions {
+        width: 75px;
+        height: 75px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .playlist > .actions button#play {
+        padding: 3px;
+        height: fit-content;
+        width: fit-content;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .playlist:hover {
+        transform: scale(1.07);
+        background-color: rgb(255, 255, 255);
+        border-color: #1DB954 !important;
     }
 </style>
