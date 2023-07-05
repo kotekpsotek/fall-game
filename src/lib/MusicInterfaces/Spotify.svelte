@@ -1,13 +1,14 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
     import { SpotifyApi, type UserProfileData, type UserPlaylistDatas } from "$lib/api/spotify";
-    import { UserAvatarFilledAlt, ArrowLeft, Playlist, PlayFilled } from "carbon-icons-svelte";
+    import { UserAvatarFilledAlt, ArrowLeft, Playlist, PlayFilled, SkipBackFilled, SkipForwardFilled } from "carbon-icons-svelte";
 
     const dsp = createEventDispatcher();
     
     let userData: UserProfileData | undefined;
     let playListDatas: UserPlaylistDatas | undefined;
 
+    let actualOverflowPageNum: number = 1;
     onMount(async () => {
         userData = await SpotifyApi.currentUserProfile();
         playListDatas = await SpotifyApi.currentUserPlaylists();
@@ -40,7 +41,7 @@
         </div>
         <div class="albums-list" class:no-playlists={!playListDatas?.items.length}>
             {#if playListDatas?.items.length}
-                {#each playListDatas.items as playlist, i}
+                {#each playListDatas.items.slice((actualOverflowPageNum == 1 ? 0 : actualOverflowPageNum * 5 - 5), actualOverflowPageNum * 5) as playlist, i}
                     <div class="playlist" data-spotify-uri="{playlist.uri}">
                         <div class="playlist-images">
                             {#if playlist.images.length}
@@ -70,6 +71,23 @@
             {/if}
         </div>
     </div>
+    {#if (playListDatas?.items.length || 0) > 5}
+        <div class="overflow-manage">
+            <div class="left">
+                <button on:click={() => actualOverflowPageNum-=1} style="visibility: {actualOverflowPageNum == 1 ? "hidden" : "visible"};">
+                    <SkipBackFilled size={28}/>
+                </button>
+            </div>
+            <div class="page">
+                <p>Page: {actualOverflowPageNum}/{Math.ceil((playListDatas?.items.length || 0) / 5)}</p>
+            </div>
+            <div class="right">
+                <button on:click={() => actualOverflowPageNum += 1}>
+                    <SkipForwardFilled size={28}/>
+                </button>
+            </div>
+        </div>
+    {/if}
 {/if}
 
 <style>
@@ -141,10 +159,14 @@
     }
 
     div.albums-list {
+        --one-playlist-width: 75px;
+        --gap-between-playlists: 5px;
+        height: calc(var(--one-playlist-width) * 5 + var(--gap-between-playlists) * 3);
         padding-top: 10px;
         display: flex;
         flex-direction: column;
         row-gap: 5px;
+        z-index: 2;
     }
 
     div.albums-list > .playlist {
@@ -213,5 +235,32 @@
         transform: scale(1.07);
         background-color: rgb(255, 255, 255);
         border-color: #1DB954 !important;
+    }
+
+    .overflow-manage {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: 'Roboto-Normal', sans-serif;
+        padding: 5px;
+    }
+
+    .overflow-manage :is(.left, .right) {
+        width: 75px;
+    }
+
+    .overflow-manage button {
+        cursor: pointer;
+    }
+
+    .overflow-manage p {
+        margin: 0px;
+    }
+
+    .overflow-manage > div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 </style>
