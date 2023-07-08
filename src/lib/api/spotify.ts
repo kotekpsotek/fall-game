@@ -151,7 +151,9 @@ interface ActualPlaying {
     /** Whether GUI element to manage subject state should be loaded */
     setted: boolean,
     playing: boolean,
-    spotify_id?: string
+    spotify_id?: string,
+    /** The most valulable in order to play songs from spotify */
+    spotify_uri?: string
 }
 
 /** Representing source of what is actual playing */

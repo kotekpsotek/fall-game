@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Music, Close, Play, Pause } from "carbon-icons-svelte";
     import { page } from "$app/stores";
-    import { spotifyApiAuthDatas } from "$lib/api/spotify";
+    import { spotifyApiAuthDatas, whatIsPlayedStore } from "$lib/api/spotify";
     
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
@@ -72,15 +72,55 @@
             // TODO:
         }
     }
+    
+    // Wait for load spotify iFrame API and then listen for changes in 'manage staus storage'
+    (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {        
+        // Listening for changes on 'manage staus storage'
+        whatIsPlayedStore.subscribe(data => {
+            if (data.setted) {
+                switch (data.type) {
+                    case "spotify":
+                        setTimeout(() => {
+                            const songStateEl = document.getElementById("song-state");
+                            const options = {
+                                uri: data.spotify_uri
+                            };
+                            const callback = () => {};
+                            IFrameAPI.createController(songStateEl, options, callback);
+                        }, 200);
+                }
+            }
+        })
+    };
+
+    
 </script>
 
+<svelte:head>
+    <script src="https://open.spotify.com/embed-podcast/iframe-api/v1" async></script>
+</svelte:head>
+
 <button class="music-button" on:click={displayMusicMenu} title="Music">
-    {#if !musicMenuOpen}
+    {#if !musicMenuOpen && !$whatIsPlayedStore.setted}
         <Music size={24} fill="white"/>
+    {:else if !musicMenuOpen && $whatIsPlayedStore.setted}
+        {#if $whatIsPlayedStore.playing}
+            <Pause size={24} fill="white"/>
+        {:else}
+            <Play size={24} fill="white"/>
+        {/if}
     {:else}
         <Close size={27} fill="white"/>
     {/if}
 </button>
+
+<!-- Manage song playing statuses -->
+{#if $whatIsPlayedStore.setted}
+    <div class="songs-statuses-box">
+        <!-- Here user can manage songs which are playing -->
+        <div class="actual-song-state" id="song-state"></div>
+    </div>
+{/if}
 
 {#if toDisplay.status == "quick game"}
     <InGame on:end={ev => toDisplay.changeStatus(null)}/>
@@ -106,6 +146,11 @@
         overflow: hidden !important;
         cursor: pointer;
         z-index: 2;
+    }
+
+    .songs-statuses-box {
+        width: 200px;
+        height: 100px;
     }
     
     .app-layout-menu {
