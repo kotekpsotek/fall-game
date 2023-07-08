@@ -24,7 +24,7 @@
         </div>
         <div class="bottom">
             <div class="switch-swiftly-back">
-                <button on:click={ev => dsp("left-demand")}>
+                <button on:click={ev => dsp("leave-demand")}>
                     <ArrowLeft size={24} fill="white"/>
                 </button>
             </div>

@@ -53,7 +53,7 @@
                 </div>
             {:else if displayPickuMusicMenu == "spotify"}
                 <!-- Display pickup music from 'Spotify' interface -->
-                <Spotify/>
+                <Spotify on:leave-demand={() => { displayPickuMusicMenu = void displayPickuMusicMenu }}/>
             {/if}
         </div>
 </div>
