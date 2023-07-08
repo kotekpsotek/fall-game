@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { SpotifyApi, type UserProfileData, type UserPlaylistDatas } from "$lib/api/spotify";
+    import { SpotifyApi, whatIsPlayedStore, type UserProfileData, type UserPlaylistDatas } from "$lib/api/spotify";
     import { UserAvatarFilledAlt, ArrowLeft, Playlist, PlayFilled, SkipBackFilled, SkipForwardFilled } from "carbon-icons-svelte";
 
     const dsp = createEventDispatcher();
@@ -14,7 +14,23 @@
         playListDatas = await SpotifyApi.currentUserPlaylists();
         console.log(playListDatas)
     });
+
+
+    /** Start play spotify music playlist */
+    let whetherDisplayIframe = false;
+    function playPlaylist(spotifyId: string) {
+        return function(ev: Event) {
+            whatIsPlayedStore.update(actualDatas => {
+                actualDatas = { type: "spotify", playing: true, setted: true, spotify_id: spotifyId };
+                return actualDatas;
+            });
+        }
+    }
 </script>
+
+<svelte:head>
+    <script src="https://open.spotify.com/embed-podcast/iframe-api/v1" async></script>
+</svelte:head>
 
 {#if userData}
     <div class="spotify-pickup">
@@ -60,7 +76,7 @@
                             <p>{playlist.name}</p>
                         </div>
                         <div class="actions">
-                            <button id="play">
+                            <button id="play" on:click={playPlaylist(playlist.id)} title="Play music playlist">
                                 <PlayFilled size={28} fill="black"/>
                             </button>
                         </div>

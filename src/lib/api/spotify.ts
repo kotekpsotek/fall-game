@@ -144,3 +144,18 @@ export class SpotifyApi {
         }
     }
 }
+
+/** Representing type of source which is actual playing */
+interface ActualPlaying {
+    type: "spotify",
+    /** Whether GUI element to manage subject state should be loaded */
+    setted: boolean,
+    playing: boolean,
+    spotify_id?: string
+}
+
+/** Representing source of what is actual playing */
+export const whatIsPlayedStore = (function() {
+    const store = writable<ActualPlaying>({ playing: false } as ActualPlaying)
+    return { ...store }; 
+})()
