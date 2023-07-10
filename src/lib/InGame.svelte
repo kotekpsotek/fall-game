@@ -3,6 +3,7 @@
     import { onMount, createEventDispatcher } from "svelte";
     import { invoke } from "@tauri-apps/api";
     import PointsBadge from "./PointsBadge.svelte";
+    import GameEndScreen from "$lib/GameEndScreen.svelte";
 
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
@@ -68,6 +69,7 @@
     let userPoints = 0;
 
     // When application was mounted
+    let gameEnded = false;
     onMount(() => {
         let int: NodeJS.Timer;
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
@@ -85,10 +87,30 @@
 
             // Display User points, Add it for "games records" and clear it
             await invoke("game_end", { userPoints }); // Add points
-            userPoints = 0;
 
-            // Emit that user end game
-            disp("end");
+            // Create game end Screen
+            gameEnded = true;
+            const gameEndScreen = new GameEndScreen({
+                target: document.body,
+                props: {
+                    userPoints
+                }
+            });
+
+            // ..Events handling from 'GameEndScreen'
+            // ... Emit that user end game
+            gameEndScreen.$on("new-game-demand", () => {
+                gameEndScreen.$destroy();
+                gameEnded = true;
+                disp("renew");
+            });
+            
+            // ... Emit that user would like go to menu
+            gameEndScreen.$on("switch-to-menu", () => {
+                gameEndScreen.$destroy();
+                userPoints = 0;
+                disp("end");
+            });
         });
 
         // Spawn initial interval
@@ -96,7 +118,9 @@
     });
 </script>
 
-<PointsBadge {userPoints}/>
+{#if !gameEnded}
+    <PointsBadge {userPoints}/>
+{/if}
 <div class="in-game" bind:this="{gameContext}"></div>
 
 <style>

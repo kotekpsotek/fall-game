@@ -126,16 +126,18 @@
     </div>
 {/if}
 
-{#if toDisplay.status == "quick game"}
-    <InGame on:end={ev => toDisplay.changeStatus(null)}/>
-{:else if !toDisplay.status}
-    <div class="app-layout-menu">
-        <h2>Game Menu</h2>
-        <div class="menu">
-            <button on:click={ev => toDisplay.changeStatus("quick game")}>Quick game</button>
+{#key toDisplay}
+    {#if toDisplay.status == "quick game"}
+        <InGame on:end={ev => toDisplay.changeStatus(null)} on:renew={ev => toDisplay.changeStatus("quick game")}/>
+    {:else if !toDisplay.status}
+        <div class="app-layout-menu">
+            <h2>Game Menu</h2>
+            <div class="menu">
+                <button on:click={ev => toDisplay.changeStatus("quick game")}>Quick game</button>
+            </div>
         </div>
-    </div>
-{/if}
+    {/if}
+{/key}
 
 <svelte:head>
     <!-- Load spotify IFrame API for whole application usage (the simplies way) -->
