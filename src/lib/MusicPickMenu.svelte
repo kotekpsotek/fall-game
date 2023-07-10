@@ -1,11 +1,19 @@
 <script lang="ts">
     import { ConnectionSignalOff } from "carbon-icons-svelte";
-    import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas } from "$lib/api/spotify";
+    import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas, whatIsPlayedStore } from "$lib/api/spotify";
     import Spotify from "$lib/MusicInterfaces/Spotify.svelte";
     
     // Determine what kind of music interface user is displaying currently
     let displayPickuMusicMenu: "spotify" | undefined;
 
+    // Obtain 'Spotify IFrameAPI' object
+    let spotifyIframeAPIInit: Promise<any> = new Promise(unleash => {
+        (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {        
+            unleash(IFrameAPI);
+        };
+    });
+
+    // Display responsible menu picking music from source
     function choosenMusicOption(option: "spotify") {
         switch(option) {
             case "spotify":
@@ -28,32 +36,80 @@
         }
 
     }
+
+    /** Called for music play manage menu */
+    function loadMusicPlayer(node: HTMLElement) {
+        const loading = async function() {
+            const IFrameAPI = await spotifyIframeAPIInit;
+
+            // When IFrame API was loaded else make recursivity
+            if (IFrameAPI) {
+                const { type, spotify_uri } = $whatIsPlayedStore;
+        
+                // Element within which music state can be managed
+                const musicPlayerEl = document.getElementById("player-music");
+        
+                switch (type) {
+                    case "spotify":
+                        // Load Spotify music player with controller
+                        const options = {
+                            uri: spotify_uri
+                        };
+                        const callback = () => {};
+                        IFrameAPI.createController(musicPlayerEl, options, callback);
+                }
+            }
+            else loading();
+        }
+
+        // Initialise action
+        loading();
+        
+        // Return object
+        return {}
+    }
 </script>
+
+<svelte:head>
+    <!-- Load spotify IFrame API only for demand for usage such -->
+    {#if $whatIsPlayedStore.type == "spotify" && $whatIsPlayedStore.setted}
+        <script src="https://open.spotify.com/embed-podcast/iframe-api/v1" async></script>
+    {/if}
+</svelte:head>
 
 <div class="music-interface-content">
     <!-- Background -->
         <div class="music-interface">
             <!-- Source element with interface -->
-            {#if !displayPickuMusicMenu}
-                <!-- Display pickup from source interface -->
-                <h2>Music Menu</h2>
-                <div class="music-options">
-                    <button id="spotify" on:click={ev => choosenMusicOption("spotify")}>
-                        <img src="/spotify-color-analog.png" alt=""> 
-                        <p>Apply from <span>Spotify</span></p>
-                        {#if !document.body.isConnected}
-                            <div class="not-connected">
-                                <p>Turn on network connection</p>
-                                <div class="no-connection-sign">
-                                    <ConnectionSignalOff fill="white"/>
+            {#if !$whatIsPlayedStore.setted}
+                {#if !displayPickuMusicMenu}
+                    <!-- Display pickup from source interface -->
+                    <h2>Music Menu</h2>
+                    <div class="music-options">
+                        <button id="spotify" on:click={ev => choosenMusicOption("spotify")}>
+                            <img src="/spotify-color-analog.png" alt=""> 
+                            <p>Apply from <span>Spotify</span></p>
+                            {#if !document.body.isConnected}
+                                <div class="not-connected">
+                                    <p>Turn on network connection</p>
+                                    <div class="no-connection-sign">
+                                        <ConnectionSignalOff fill="white"/>
+                                    </div>
                                 </div>
-                            </div>
-                        {/if}
-                    </button>
+                            {/if}
+                        </button>
+                    </div>
+                {:else if displayPickuMusicMenu == "spotify"}
+                    <!-- Display pickup music from 'Spotify' interface -->
+                    <Spotify on:leave-demand={() => { displayPickuMusicMenu = void displayPickuMusicMenu }}/>
+                {/if}
+            {:else}
+                <!-- When music is durning playing or is paused but not declined -->
+                <div class="music-play-manager" use:loadMusicPlayer>
+                    <div id="player-music"></div>
+                    <button id="change-playlist">Change Playlist</button>
+                    <button id="decline-playlist">Decline Music Playlist</button>
                 </div>
-            {:else if displayPickuMusicMenu == "spotify"}
-                <!-- Display pickup music from 'Spotify' interface -->
-                <Spotify on:leave-demand={() => { displayPickuMusicMenu = void displayPickuMusicMenu }}/>
             {/if}
         </div>
 </div>

@@ -71,34 +71,8 @@
             // Listen events
             // TODO:
         }
-    }
-    
-    // Wait for load spotify iFrame API and then listen for changes in 'manage staus storage'
-    (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {        
-        // Listening for changes on 'manage staus storage'
-        whatIsPlayedStore.subscribe(data => {
-            if (data.setted) {
-                switch (data.type) {
-                    case "spotify":
-                        setTimeout(() => {
-                            const songStateEl = document.getElementById("song-state");
-                            const options = {
-                                uri: data.spotify_uri
-                            };
-                            const callback = () => {};
-                            IFrameAPI.createController(songStateEl, options, callback);
-                        }, 200);
-                }
-            }
-        })
-    };
-
-    
+    }   
 </script>
-
-<svelte:head>
-    <script src="https://open.spotify.com/embed-podcast/iframe-api/v1" async></script>
-</svelte:head>
 
 <button class="music-button" on:click={displayMusicMenu} title="Music">
     {#if !musicMenuOpen && !$whatIsPlayedStore.setted}

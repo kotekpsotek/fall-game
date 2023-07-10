@@ -146,7 +146,7 @@ export class SpotifyApi {
 }
 
 /** Representing type of source which is actual playing */
-interface ActualPlaying {
+export interface ActualPlaying {
     type: "spotify",
     /** Whether GUI element to manage subject state should be loaded */
     setted: boolean,
