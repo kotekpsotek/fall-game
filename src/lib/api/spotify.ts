@@ -170,3 +170,6 @@ export const whatIsPlayedStore = (function() {
         ...store 
     }; 
 })()
+
+// Store Access To Spotify Iframe API
+export let spotifyIframeAPI = { ...writable<any>() };

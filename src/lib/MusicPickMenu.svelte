@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ConnectionSignalOff, ChangeCatalog, Close } from "carbon-icons-svelte";
-    import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas, whatIsPlayedStore } from "$lib/api/spotify";
+    import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas, whatIsPlayedStore, spotifyIframeAPI } from "$lib/api/spotify";
     import Spotify from "$lib/MusicInterfaces/Spotify.svelte";
     
     export let musicInterfaceAllContent: HTMLDivElement;
@@ -9,11 +9,6 @@
     let displayPickuMusicMenu: "spotify" | undefined;
 
     // Obtain 'Spotify IFrameAPI' object
-    let spotifyIframeAPIInit: Promise<any> = new Promise(unleash => {
-        (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {        
-            unleash(IFrameAPI);
-        };
-    });
     let embeddedAPI: any;
 
     // Display responsible menu picking music from source
@@ -56,7 +51,7 @@
     /** Called for music play manage menu */
     function loadMusicPlayer(node: HTMLElement) {
         const loading = async function() {
-            const IFrameAPI = await spotifyIframeAPIInit;
+            const IFrameAPI = $spotifyIframeAPI;
 
             // When IFrame API was loaded else make recursivity
             if (IFrameAPI) {
@@ -85,13 +80,6 @@
         return {}
     }
 </script>
-
-<svelte:head>
-    <!-- Load spotify IFrame API only for demand for usage such -->
-    {#if $whatIsPlayedStore.type == "spotify" && $whatIsPlayedStore.setted}
-        <script src="https://open.spotify.com/embed-podcast/iframe-api/v1" async></script>
-    {/if}
-</svelte:head>
 
 <div class="music-interface-content" bind:this={musicInterfaceAllContent}>
     <!-- Background -->

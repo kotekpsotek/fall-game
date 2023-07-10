@@ -1,11 +1,22 @@
 <script lang="ts">
     import { Music, Close, Play, Pause } from "carbon-icons-svelte";
     import { page } from "$app/stores";
-    import { spotifyApiAuthDatas, whatIsPlayedStore } from "$lib/api/spotify";
+    import { spotifyApiAuthDatas, whatIsPlayedStore, spotifyIframeAPI } from "$lib/api/spotify";
     
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
     import MusicPickMenu from "$lib/MusicPickMenu.svelte";
+
+    // Assign to "spotifyIframeAPI" Spotify Iframe API object thus give access to that
+    (async () => {
+        let spotifyIframeAPIInit: Promise<any> = new Promise(unleash => {
+            (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {        
+                unleash(IFrameAPI);
+            };
+        });
+        
+        $spotifyIframeAPI = await spotifyIframeAPIInit;
+    })();
 
     // Make next steps to authenticate user in 'Spotify API'
     const url = new URL(document.URL);
@@ -77,6 +88,9 @@
 
                 // Make menu visible again
                 musicInterfaceAllContent.style.visibility = "visible";
+
+                // Load again the music menu
+                musicMenuComponent.makeVisible = true;
             } 
             else {
                 // Crearting menu    
@@ -122,6 +136,11 @@
         </div>
     </div>
 {/if}
+
+<svelte:head>
+    <!-- Load spotify IFrame API for whole application usage (the simplies way) -->
+    <script src="https://open.spotify.com/embed-podcast/iframe-api/v1" async></script>
+</svelte:head>
 
 <style>
     button.music-button {
