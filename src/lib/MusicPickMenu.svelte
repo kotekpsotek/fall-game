@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ConnectionSignalOff } from "carbon-icons-svelte";
+    import { ConnectionSignalOff, ChangeCatalog, Close } from "carbon-icons-svelte";
     import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas, whatIsPlayedStore } from "$lib/api/spotify";
     import Spotify from "$lib/MusicInterfaces/Spotify.svelte";
     
@@ -107,8 +107,14 @@
                 <!-- When music is durning playing or is paused but not declined -->
                 <div class="music-play-manager" use:loadMusicPlayer>
                     <div id="player-music"></div>
-                    <button id="change-playlist">Change Playlist</button>
-                    <button id="decline-playlist">Decline Music Playlist</button>
+                    <button id="change-playlist" on:click={changePlaylist}>
+                        <ChangeCatalog size={24}/>
+                        <p>Change Playlist</p>
+                    </button>
+                    <button id="decline-playlist" on:click={declinePlaylist}>
+                        <Close size={28}/>
+                        <p>Decline Music Playlist</p>
+                    </button>
                 </div>
             {/if}
         </div>
@@ -211,5 +217,26 @@
         display: flex;
         align-items: center;
         justify-content: flex-start;
+    }
+
+    .music-play-manager {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        row-gap: 5px;
+    }
+
+    .music-play-manager button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        column-gap: 10px;
+        background-color: white;
+        border: solid 1px black;
+        border-radius: 4px;
+        padding: 5px;
+        font-size: 15px;
+        cursor: pointer;
     }
 </style>
