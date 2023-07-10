@@ -159,5 +159,14 @@ export interface ActualPlaying {
 /** Representing source of what is actual playing */
 export const whatIsPlayedStore = (function() {
     const store = writable<ActualPlaying>({ playing: false } as ActualPlaying)
-    return { ...store }; 
+    return { 
+        /** @description Change store value to bengining */
+        setInitialValue() {
+            store.update(val => {
+                val = { playing: false } as ActualPlaying; // breaking type addnotation allowed manually
+                return val;
+            });
+        }, 
+        ...store 
+    }; 
 })()

@@ -14,6 +14,7 @@
             unleash(IFrameAPI);
         };
     });
+    let embeddedAPI: any;
 
     // Display responsible menu picking music from source
     function choosenMusicOption(option: "spotify") {
@@ -39,6 +40,19 @@
 
     }
 
+    // Event emitted when user click on "Change Playlist" button was captured, what claim about he would like to change actual playing playlist
+    function changePlaylist() {
+        embeddedAPI.togglePlay();
+        $whatIsPlayedStore.setted = false;
+    }
+
+    // Event emitted when user click on "Change Playlist" button was captured, what claim about user would like to chanage music picking source
+    function declinePlaylist() {
+        embeddedAPI.togglePlay();
+        whatIsPlayedStore.setInitialValue();
+        displayPickuMusicMenu = void displayPickuMusicMenu; // Setup as undefined value
+    }
+
     /** Called for music play manage menu */
     function loadMusicPlayer(node: HTMLElement) {
         const loading = async function() {
@@ -57,7 +71,7 @@
                         const options = {
                             uri: spotify_uri
                         };
-                        const callback = () => {};
+                        const callback = (embedded: unknown) => embeddedAPI = embedded;
                         IFrameAPI.createController(musicPlayerEl, options, callback);
                 }
             }
