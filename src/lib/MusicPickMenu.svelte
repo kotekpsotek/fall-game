@@ -3,6 +3,8 @@
     import { spotifyInitializeUserAuthentication, spotifyApiAuthDatas, whatIsPlayedStore } from "$lib/api/spotify";
     import Spotify from "$lib/MusicInterfaces/Spotify.svelte";
     
+    export let musicInterfaceAllContent: HTMLDivElement;
+
     // Determine what kind of music interface user is displaying currently
     let displayPickuMusicMenu: "spotify" | undefined;
 
@@ -77,7 +79,7 @@
     {/if}
 </svelte:head>
 
-<div class="music-interface-content">
+<div class="music-interface-content" bind:this={musicInterfaceAllContent}>
     <!-- Background -->
         <div class="music-interface">
             <!-- Source element with interface -->
@@ -119,6 +121,8 @@
             {/if}
         </div>
 </div>
+
+<svelte:options accessors={true}/>
 
 <style>
     .music-interface-content {
@@ -238,5 +242,9 @@
         padding: 5px;
         font-size: 15px;
         cursor: pointer;
+    }
+
+    button#change-playlist {
+        margin-top: 5px;
     }
 </style>

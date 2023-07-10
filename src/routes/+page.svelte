@@ -57,19 +57,35 @@
     let musicMenuComponent: MusicPickMenu;
     function displayMusicMenu() {
         if (musicMenuOpen) {
-            // Closing music menu
-            musicMenuComponent?.$destroy();
+            if ($whatIsPlayedStore.setted) {
+                // When user pick up music to play. This whole surrounding functionality is for play song in background after hide menu from user view
+                const { musicInterfaceAllContent } = musicMenuComponent;
+                
+                // Hide menu is more preferable then closing because music will be playing
+                musicInterfaceAllContent.style.visibility = "hidden";
+            }
+            else {
+                // Closing music menu
+                musicMenuComponent?.$destroy();
+            }
+
             musicMenuOpen = false;
         } else {
-            // Crearting menu
+            if ($whatIsPlayedStore.setted) {
+                // When user pick up music to play. This whole surrounding functionality is for play song and display song which is actual on playing progress 
+                const { musicInterfaceAllContent } = musicMenuComponent;
+
+                // Make menu visible again
+                musicInterfaceAllContent.style.visibility = "visible";
+            } 
+            else {
+                // Crearting menu    
+                musicMenuComponent = new MusicPickMenu({
+                    target: document.body
+                })
+            }
+
             musicMenuOpen = true;
-    
-            musicMenuComponent = new MusicPickMenu({
-                target: document.body
-            })
-    
-            // Listen events
-            // TODO:
         }
     }   
 </script>
