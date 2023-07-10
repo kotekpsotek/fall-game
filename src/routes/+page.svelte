@@ -156,7 +156,7 @@
         border-radius: 50%;
         overflow: hidden !important;
         cursor: pointer;
-        z-index: 2;
+        z-index: 11;
     }
 
     .songs-statuses-box {

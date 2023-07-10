@@ -4,6 +4,7 @@
     import { invoke } from "@tauri-apps/api";
     import PointsBadge from "./PointsBadge.svelte";
     import GameEndScreen from "$lib/GameEndScreen.svelte";
+    import { PauseFuture, Continue } from "carbon-icons-svelte";
 
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
@@ -70,6 +71,14 @@
 
     // When application was mounted
     let gameEnded = false;
+    let paused = false;
+
+    /** @description When user click on Pause/Resume button */
+    function pauseResume() {
+        paused = !paused;
+        document.dispatchEvent(new Event("paused"))
+    }
+
     onMount(() => {
         let int: NodeJS.Timer;
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
@@ -113,6 +122,25 @@
             });
         });
 
+        // When user decide to pause game
+        document.addEventListener("paused", _ => {
+            if (!paused) {
+                addInt();
+            }
+            else {
+                clearInterval(int);
+
+                setTimeout(() => {
+                    const el = document.querySelector("h2.paused-description");
+                    el?.addEventListener("animationend", ({ animationName }: any) => {
+                        console.warn(animationName)
+                        const bCln = animationName.includes("scale-to") ? "front" : "back"; 
+                        el.classList.replace(bCln, animationName.includes("scale-to") ? "back" : "front");
+                    });
+                }, 100)
+            }
+        });
+
         // Spawn initial interval
         addInt();
     });
@@ -121,12 +149,85 @@
 {#if !gameEnded}
     <PointsBadge {userPoints}/>
 {/if}
+<button id="pause" on:click={pauseResume}>
+    {#if paused}
+        <Continue size={24} fill="white"/>
+    {:else}
+        <PauseFuture size={24} fill="white"/>
+    {/if}
+</button>
 <div class="in-game" bind:this="{gameContext}"></div>
+{#if paused}
+    <div class="intermission-screen">
+        <!-- Class 'back' is only for preserve css styles for this class -->
+        <h2 class="paused-description front" class:back={1 == Math.random() - 1}>Paused</h2>
+    </div>
+{/if}
 
 <style>
     .in-game {
         width: 150vw;
         height: 150vh;
         overflow: auto;
+    }
+
+    button#pause {
+        width: 40px;
+        height: 40px;
+        position: absolute;
+        top: 10px;
+        left: 5px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border: solid 1px white;
+        border-radius: 50%;
+        overflow: hidden !important;
+        cursor: pointer;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 11;
+    }
+
+    .intermission-screen {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+    }
+
+    h2.paused-description {
+        color: white;
+    }
+    
+    h2.front {
+        animation: scale-to 500ms linear forwards normal;
+    }
+    
+    h2.back {
+        animation: scale-from 500ms linear forwards normal;
+    }
+
+    @keyframes scale-to {
+        to {
+            transform: scale(0.5);
+        }
+    }
+
+    @keyframes scale-from {
+        from {
+            transform: scale(0.5);
+        }
+
+        to {
+            transform: scale(1.0);
+        }
     }
 </style>
