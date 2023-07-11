@@ -27,6 +27,11 @@
             image.style.right = pos_width + "px";
             image.style.zIndex = "10";
             gameContext.appendChild(image);
+
+            // Add rotation to image
+            const rotateDegrees = await invoke("get_rotation_degrees");
+            const plusMinus = Math.floor(Math.random() * 2);
+            image.style.transform = `rotate(${plusMinus == 1 ? "" : "-"}${rotateDegrees}deg)`;
             
             // Add new heart to records of hearts lisy
             const objSpwnd = { timeMs: Date.now(), image };

@@ -1,5 +1,6 @@
 use crate::types::SpotifyAuthD;
 use std::{fs, path::Path};
+use rand::{thread_rng, Rng};
 
 static SPOTIFY_AUTH_FILE_NAME: &str = "spotify_auth.json";
 
@@ -29,4 +30,9 @@ pub fn load_spotify_auth_datas() -> SpotifyAuthD {
     else {
         SpotifyAuthD::default()
     }
+}
+
+#[tauri::command]
+pub fn get_rotation_degrees() -> u8 {
+    thread_rng().gen_range(0..90)
 }
