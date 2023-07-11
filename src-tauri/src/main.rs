@@ -96,6 +96,7 @@ impl AppMenu {
 fn main() {
   use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit };
 
+  
   let window_menu = AppMenu::create();
   tauri::Builder::default()
     .menu(window_menu)
@@ -126,4 +127,6 @@ fn main() {
     })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+
+    todo!("System Tray Menu with 'Games Scores' option same as in example of 'Native Window Menu'");
 }
