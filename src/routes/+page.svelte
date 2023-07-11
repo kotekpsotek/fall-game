@@ -67,6 +67,10 @@
     let musicMenuOpen = false;
     let musicMenuComponent: MusicPickMenu;
     function displayMusicMenu() {
+        // Emit event that game should be paused
+        window.dispatchEvent(new Event("pause-init-outside"));
+
+        // Open/Close/Show/Hide Music Menu
         if (musicMenuOpen) {
             if ($whatIsPlayedStore.setted) {
                 // When user pick up music to play. This whole surrounding functionality is for play song in background after hide menu from user view

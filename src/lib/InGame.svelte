@@ -90,6 +90,11 @@
         if (ctrlKey && which == 32) pauseResume();
     });
 
+    // Listen for Initialize Pause from outside snippest calls
+    window.addEventListener("pause-init-outside", () => {
+        pauseResume();
+    });
+
     onMount(() => {
         let int: NodeJS.Timer;
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
