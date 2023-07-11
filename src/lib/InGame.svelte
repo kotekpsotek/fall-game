@@ -84,6 +84,12 @@
         document.dispatchEvent(new Event("paused"))
     }
 
+    // When user click one time keyborad key
+    window.addEventListener("keydown", ({ which, ctrlKey }) => {
+        // Pause/Resume game when user hold "CTRL + Space" key-combination
+        if (ctrlKey && which == 32) pauseResume();
+    });
+
     onMount(() => {
         let int: NodeJS.Timer;
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
