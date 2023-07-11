@@ -7,11 +7,11 @@
     const dsp = createEventDispatcher();
 </script>
 
-<button class="close" on:click={_ => dsp("terminate")}>
-    <Close size={28} fill="white"/>
-</button>
-
 <div class="scores-menu-layout">
+    <button class="close" on:click={_ => dsp("terminate")}>
+        <Close size={28} fill="white"/>
+    </button>
+    
     <div class="scores-menu">
         <h2>Your Game Scores</h2>
         <table class="scores">
@@ -51,9 +51,14 @@
         width: 100vw;
         height: 100vh;
         display: flex;
+        position: absolute;
+        top: 0px;
+        right: 0px;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        background-color: rgb(243, 147, 164);
+        z-index: 10;
     }
 
     .scores-menu {

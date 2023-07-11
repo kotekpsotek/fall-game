@@ -4,6 +4,7 @@
     import { spotifyApiAuthDatas, whatIsPlayedStore, spotifyIframeAPI } from "$lib/api/spotify";
     import { invoke } from "@tauri-apps/api";
     import { listen } from "@tauri-apps/api/event";
+    import { gameEndScreenDisplaying } from "$lib/api/states";
     import ScoresList from "$lib/ScoresList.svelte";
     import type { GameRecord } from "$lib/api/game.types";
     
@@ -155,7 +156,7 @@
         <InGame on:end={ev => toDisplay.changeStatus(null)} on:renew={ev => toDisplay.changeStatus("quick game")}/>
     {:else if toDisplay.status == "scores list"}
         <ScoresList {scores} on:terminate={_ => toDisplay.changeStatus(null)}/>
-    {:else if !toDisplay.status}
+    {:else if !toDisplay.status && !$gameEndScreenDisplaying}
         <div class="app-layout-menu">
             <div class="menu-enclosing">
                 <h2>Game Menu</h2>

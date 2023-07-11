@@ -3,6 +3,7 @@
     import { onMount, createEventDispatcher } from "svelte";
     import { invoke } from "@tauri-apps/api";
     import { emit } from "@tauri-apps/api/event";
+    import { gameEndScreenDisplaying } from "$lib/api/states";
     import PointsBadge from "./PointsBadge.svelte";
     import GameEndScreen from "$lib/GameEndScreen.svelte";
     import { PauseFuture, Continue, Close } from "carbon-icons-svelte";
@@ -136,9 +137,13 @@
                 }
             });
 
+            // Change global state which witness that 'Game End' Menu is displaying on view
+            $gameEndScreenDisplaying = true;
+
             // ..Events handling from 'GameEndScreen'
             // ... Emit that user end game
             gameEndScreen.$on("new-game-demand", () => {
+                $gameEndScreenDisplaying = false;
                 gameEndScreen.$destroy();
                 gameEnded = true;
                 disp("renew");
@@ -146,6 +151,7 @@
             
             // ... Emit that user would like go to menu
             gameEndScreen.$on("switch-to-menu", () => {
+                $gameEndScreenDisplaying = false;
                 gameEndScreen.$destroy();
                 userPoints = 0;
                 disp("end");
