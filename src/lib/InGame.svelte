@@ -4,7 +4,7 @@
     import { invoke } from "@tauri-apps/api";
     import PointsBadge from "./PointsBadge.svelte";
     import GameEndScreen from "$lib/GameEndScreen.svelte";
-    import { PauseFuture, Continue } from "carbon-icons-svelte";
+    import { PauseFuture, Continue, Close } from "carbon-icons-svelte";
 
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
@@ -93,9 +93,7 @@
     onMount(() => {
         let int: NodeJS.Timer;
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
-
-        // Clear screen and hearts records from user screen
-        window.addEventListener("hearts-overflow-met", async () => {
+        const commonEndGameActivities = async () => {
             // Clear addition loop
             clearInterval(int);
             
@@ -108,8 +106,16 @@
             // Display User points, Add it for "games records" and clear it
             await invoke("game_end", { userPoints }); // Add points
 
-            // Create game end Screen
+            // Sign game process as ended
             gameEnded = true;
+        }
+
+        // Clear screen and hearts records from user screen
+        window.addEventListener("hearts-overflow-met", async () => {
+            // Perform common activities in order to end game
+            await commonEndGameActivities();
+
+            // Create game end Screen
             const gameEndScreen = new GameEndScreen({
                 target: document.body,
                 props: {
@@ -131,6 +137,15 @@
                 userPoints = 0;
                 disp("end");
             });
+        });
+
+        // When game was ended from some reason
+        window.addEventListener("end", async _ => {
+            // Perform common activities in order to end game
+            await commonEndGameActivities();
+
+            // Emit end game event
+            disp("end");
         });
 
         // When user decide to pause game
@@ -168,10 +183,17 @@
     {/if}
 </button>
 <div class="in-game" bind:this="{gameContext}"></div>
+
+<!-- Whether game should be paused -->
 {#if paused}
     <div class="intermission-screen">
         <!-- Class 'back' is only for preserve css styles for this class -->
         <h2 class="paused-description front" class:back={1 == Math.random() - 1}>Paused</h2>
+        <div class="options">
+            <button on:click={_ => window.dispatchEvent(new Event("end"))} title="End game">
+                <Close size={28} fill="white"/>
+            </button>
+        </div>
     </div>
 {/if}
 
@@ -210,8 +232,24 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+        row-gap: 20px;
         align-items: center;
         z-index: 10;
+    }
+
+    .intermission-screen > :is(.options) {
+        display: flex;
+        column-gap: 10px;
+    }
+    
+    .intermission-screen > :is(.options) button {
+        width: 50px;
+        height: 50px;
+        padding: 10px;
+        border: solid 1px white;
+        border-radius: 4px;
+        background-color: rgba(10, 10, 94, 0.712);
+        cursor: pointer;
     }
 
     h2.paused-description {
