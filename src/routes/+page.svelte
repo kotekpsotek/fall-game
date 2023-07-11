@@ -135,9 +135,11 @@
         <InGame on:end={ev => toDisplay.changeStatus(null)} on:renew={ev => toDisplay.changeStatus("quick game")}/>
     {:else if !toDisplay.status}
         <div class="app-layout-menu">
-            <h2>Game Menu</h2>
-            <div class="menu">
-                <button on:click={ev => toDisplay.changeStatus("quick game")}>Quick game</button>
+            <div class="menu-enclosing">
+                <h2>Game Menu</h2>
+                <div class="menu">
+                    <button on:click={ev => toDisplay.changeStatus("quick game")}>Quick game</button>
+                </div>
             </div>
         </div>
     {/if}
@@ -177,18 +179,32 @@
         justify-content: center;
     }
 
+    .menu-enclosing {
+        width: 300px;
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+    }
+
     h2 {
         margin-bottom: 10px;
         color: white;
     }
 
     .menu {
+        width: 100%;
         display: flex;
         flex-direction: column;
         row-gap: 5px;
     }
 
     .menu button {
+        width: 100%;
         text-transform: capitalize;
         font-size: 20px;
         padding: 5px;
