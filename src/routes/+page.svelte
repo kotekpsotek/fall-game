@@ -3,6 +3,9 @@
     import { page } from "$app/stores";
     import { spotifyApiAuthDatas, whatIsPlayedStore, spotifyIframeAPI } from "$lib/api/spotify";
     import { invoke } from "@tauri-apps/api";
+    import { listen } from "@tauri-apps/api/event";
+    import ScoresList from "$lib/ScoresList.svelte";
+    import type { GameRecord } from "$lib/api/game.types";
     
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
@@ -54,7 +57,7 @@
         else throw "Unsupported callback type";
     }
 
-    type ToDisplay = { status: "quick game" | null, changeStatus: (to: ToDisplay["status"]) => void };
+    type ToDisplay = { status: "quick game" | "scores list" | null, changeStatus: (to: ToDisplay["status"]) => void };
 
     let toDisplay: ToDisplay = { 
         status: null,
@@ -116,6 +119,13 @@
         // Hence I prefer Rust way
         await invoke("quit");
     }
+
+    // Show user scores list menu
+    let scores: GameRecord[] = [];
+    listen<GameRecord[]>("show-scores-menu", ({ payload }) => {
+        scores = payload;
+        toDisplay.changeStatus("scores list");
+    });
 </script>
 
 <button class="music-button" on:click={displayMusicMenu} title="Music">
@@ -143,6 +153,8 @@
 {#key toDisplay}
     {#if toDisplay.status == "quick game"}
         <InGame on:end={ev => toDisplay.changeStatus(null)} on:renew={ev => toDisplay.changeStatus("quick game")}/>
+    {:else if toDisplay.status == "scores list"}
+        <ScoresList {scores} on:terminate={_ => toDisplay.changeStatus(null)}/>
     {:else if !toDisplay.status}
         <div class="app-layout-menu">
             <div class="menu-enclosing">
