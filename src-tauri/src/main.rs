@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 #[macro_use]
 extern crate tauri;
-use tauri::{SystemTray, SystemTrayMenu, CustomMenuItem, Menu, WindowMenuEvent};
+use tauri::{SystemTray, SystemTrayMenu, CustomMenuItem, Menu, WindowMenuEvent, Manager};
 use rand::{thread_rng, Rng};
 use types::{Games, GameRecord};
 use std::{ fs, path::Path, vec };
@@ -101,6 +101,29 @@ fn main() {
     .menu(window_menu)
     .on_menu_event(AppMenu::handle_event)
     .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit])
+    .setup(|app| {
+      // Here are defined things by which program walk throught durning application setup to run
+      let main_window = app.get_window("main")
+        .unwrap();
+      let native_menu = main_window.menu_handle();
+      
+      // Close 'Native Window Menu Bar' when user is durning game-play
+      main_window.listen("user-on-game", {
+        let native_menu = native_menu.clone();
+        move |_| {
+          native_menu.toggle()
+            .expect("Could not close Native Window Menu for game");
+        }}
+      );
+
+      // Show user Native Window Menu Bar after capture below event 
+      main_window.listen("user-out-of-game", move |_| {
+        native_menu.show()
+          .expect("Could not show 'Native Window Menu Bar'");
+      });
+      
+      Ok(())
+    })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

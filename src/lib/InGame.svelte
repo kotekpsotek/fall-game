@@ -2,6 +2,7 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
     import { invoke } from "@tauri-apps/api";
+    import { emit } from "@tauri-apps/api/event";
     import PointsBadge from "./PointsBadge.svelte";
     import GameEndScreen from "$lib/GameEndScreen.svelte";
     import { PauseFuture, Continue, Close } from "carbon-icons-svelte";
@@ -67,7 +68,7 @@
         }
     }
 
-    let newAdditionPeriodMs = 500;
+    let newAdditionPeriodMs = 50;
     let limitHeartsSpawning = 100;
     let maximumPointsPerCatch = 1000;
     let minimumPointsPerCatch = 10;
@@ -95,7 +96,11 @@
         pauseResume();
     });
 
-    onMount(() => {
+    onMount(async () => {
+        // To inform backend that user is while game
+        const _bckOnGameSign = await emit("user-on-game");
+
+        // Game main acts
         let int: NodeJS.Timer;
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
         const commonEndGameActivities = async () => {
@@ -110,6 +115,9 @@
 
             // Display User points, Add it for "games records" and clear it
             await invoke("game_end", { userPoints }); // Add points
+
+            // Inform backend that user ends actual the game
+            const _showNativeWindowMenuBar = await emit("user-out-of-game");
 
             // Sign game process as ended
             gameEnded = true;
