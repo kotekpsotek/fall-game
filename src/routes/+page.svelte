@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { Music, Close, Play, Pause } from "carbon-icons-svelte";
+    import { Music, Close, Play, Pause, Exit } from "carbon-icons-svelte";
     import { page } from "$app/stores";
     import { spotifyApiAuthDatas, whatIsPlayedStore, spotifyIframeAPI } from "$lib/api/spotify";
+    import { invoke } from "@tauri-apps/api";
     
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
@@ -105,7 +106,16 @@
 
             musicMenuOpen = true;
         }
-    }   
+    }
+    
+    /** @description Quit Application after when function is called */
+    async function quit() {
+        // Quiting is handle by Rust, but can also by handled using JavaScript by: 
+        // import  {exit} from "@tauri-apps/api/process";
+        // exit(code);
+        // Hence I prefer Rust way
+        await invoke("quit");
+    }
 </script>
 
 <button class="music-button" on:click={displayMusicMenu} title="Music">
@@ -139,6 +149,7 @@
                 <h2>Game Menu</h2>
                 <div class="menu">
                     <button on:click={ev => toDisplay.changeStatus("quick game")}>Quick game</button>
+                    <button class="quit-button" on:click={_ => quit()} title="Quit from appliaction">Quit</button>
                 </div>
             </div>
         </div>
@@ -212,5 +223,11 @@
         color: white;
         border-radius: 2px;
         cursor: pointer;
+    }
+
+    button.quit-button {
+        --color: rgb(159, 16, 16);
+        color: var(--color);
+        border: solid 1px var(--color);
     }
 </style>

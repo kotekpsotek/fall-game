@@ -36,3 +36,9 @@ pub fn load_spotify_auth_datas() -> SpotifyAuthD {
 pub fn get_rotation_degrees() -> u8 {
     thread_rng().gen_range(0..90)
 }
+
+#[tauri::command]
+/** Terminates application */
+pub fn quit(app_handle: tauri::AppHandle) {
+    app_handle.exit(0);
+}

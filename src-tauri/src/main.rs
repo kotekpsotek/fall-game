@@ -52,10 +52,10 @@ fn game_end(userPoints: u32) -> Result<(), ()> {
 }
 
 fn main() {
-  use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees };
+  use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit };
   
   tauri::Builder::default()
-    .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees])
+    .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
