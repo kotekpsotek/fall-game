@@ -23,41 +23,6 @@
         $spotifyIframeAPI = await spotifyIframeAPIInit;
     })();
 
-    // Make next steps to authenticate user in 'Spotify API'
-    const url = new URL(document.URL);
-    if (url.search.length) { // Whole Task is making durning when user was redirected from Spotify API first authentication step. In this step Spotify API Authentication Token will be downloaded from spotify
-        const callback = url.searchParams.get("callback");
-        const code = url.searchParams.get("code");
-
-        if (callback == "spotify" && code) {
-            // Obtain authtoken now
-            fetch("https://accounts.spotify.com/api/token", {
-                method: "POST",
-                headers: {
-                    "Authorization": $page.data.authSpHeader,
-                    "Content-Type": "application/x-www-form-urlencoded"   
-                },
-                body: $page.data.requestBody // Body data are encoded in MIME format "application/x-www-form-urlencoded"
-            })
-            .then(async resp => {
-                if (resp.status == 200) {
-                    // Extract and store aut datas
-                    const body = await resp.json();
-                    $spotifyApiAuthDatas = body;
-                    $spotifyApiAuthDatas.establishedInMs = Date.now();
-
-                    $spotifyApiAuthDatas.expires_inS = ($spotifyApiAuthDatas as any).expires_in;
-                    delete ($spotifyApiAuthDatas as any).expires_in;
-
-                    // Move page again to 'root' directory
-                    window.location.replace("/");
-                }
-                else console.log("Cannot obtain authtoken");
-            })             
-        }
-        else throw "Unsupported callback type";
-    }
-
     type ToDisplay = { status: "quick game" | "scores list" | null, changeStatus: (to: ToDisplay["status"]) => void };
 
     let toDisplay: ToDisplay = { 
@@ -127,6 +92,62 @@
         scores = payload;
         toDisplay.changeStatus("scores list");
     });
+
+    // Make next steps to authenticate user in 'Spotify API'
+    const url = new URL(document.URL);
+    if (url.search.length) { // Whole Task is making durning when user was redirected from Spotify API first authentication step. In this step Spotify API Authentication Token will be downloaded from spotify
+        const callback = url.searchParams.get("callback");
+        const code = url.searchParams.get("code");
+
+        if (callback == "spotify" && code) {
+            // Obtain authtoken now
+            fetch("https://accounts.spotify.com/api/token", {
+                method: "POST",
+                headers: {
+                    "Authorization": $page.data.authSpHeader,
+                    "Content-Type": "application/x-www-form-urlencoded"   
+                },
+                body: $page.data.requestBody // Body data are encoded in MIME format "application/x-www-form-urlencoded"
+            })
+            .then(async resp => {
+                if (resp.status == 200) {
+                    // Extract and store aut datas
+                    const body = await resp.json();
+                    $spotifyApiAuthDatas = body;
+                    $spotifyApiAuthDatas.establishedInMs = Date.now();
+
+                    $spotifyApiAuthDatas.expires_inS = ($spotifyApiAuthDatas as any).expires_in;
+                    delete ($spotifyApiAuthDatas as any).expires_in;
+
+                    // Move page again to 'root' directory
+                    sessionStorage.setItem("open-spotify-pick-menu", "true");
+                    window.location.replace("/");
+                }
+                else console.log("Cannot obtain authtoken");
+            })             
+        }
+        else throw "Unsupported callback type";
+    }
+    else {
+        try {
+            const prwURL = new URL(document.referrer || "");
+            const curUrl = new URL(document.URL || "");
+            const openSpotifyPickMenu = sessionStorage.getItem("open-spotify-pick-menu");
+    
+            if ((prwURL && curUrl) && curUrl.pathname == "/" && prwURL.searchParams.get("callback") == "spotify" && openSpotifyPickMenu == "true") {
+                sessionStorage.removeItem("open-spotify-pick-menu");
+                setTimeout(() => { // Applied in order to load spotify PlayList pick menu correctly 
+                    // Crearting menu with spotify music list  
+                    displayMusicMenu();
+                    // Spotify pick playlist will be on pureview after capture event into component
+                    window.dispatchEvent(new Event("spotify-pick-playlist-should-be-open"));
+                }, 1);
+            }
+        }
+        catch(err) {
+            undefined
+        }
+    }
 </script>
 
 <button class="music-button" on:click={displayMusicMenu} title="Music">

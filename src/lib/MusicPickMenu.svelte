@@ -6,7 +6,7 @@
     export let musicInterfaceAllContent: HTMLDivElement;
 
     // Determine what kind of music interface user is displaying currently
-    let displayPickuMusicMenu: "spotify" | undefined;
+    let displayPickuMusicMenu: "spotify" | undefined = undefined;
 
     // Obtain 'Spotify IFrameAPI' object
     let embeddedAPI: any;
@@ -79,6 +79,9 @@
         // Return object
         return {}
     }
+
+    // After catch such event Spotify user playlist will be show up
+    window.addEventListener("spotify-pick-playlist-should-be-open", _ => displayPickuMusicMenu = "spotify");
 </script>
 
 <div class="music-interface-content" bind:this={musicInterfaceAllContent}>
