@@ -61,7 +61,7 @@
                 // Calculations of points to assign for user
                 const diffMs = clickMs - recordMs;
                 const calc = maximumPointsPerCatch - (diffMs * pointFor1msCatchDelay);
-                userPoints += calc > 0 ? calc : minimumPointsPerCatch;
+                userPoints += Math.round(calc > 0 ? calc : minimumPointsPerCatch);
 
                 // Remove clicked image
                 image.remove();
@@ -69,11 +69,11 @@
         }
     }
 
-    let newAdditionPeriodMs = 50;
-    let limitHeartsSpawning = 100;
-    let maximumPointsPerCatch = 1000;
-    let minimumPointsPerCatch = 10;
-    let pointFor1msCatchDelay = 1;
+    let newAdditionPeriodMs = 450; // Miliseconds gap between addition new hearts to user screen pureview. When user don't click any heart each game will be last 45 seconds
+    let limitHeartsSpawning = 100; // Maximum hearts count which can be display on user desktop screen. When user don't click any heart each game will be last 45 seconds
+    let maximumPointsPerCatch = 1000; // Maximum user points amout to catch from one click
+    let minimumPointsPerCatch = 10; // It's equavilent of 9ms, so equavilent to click on heart after 1.091 second far away it spawn moment
+    let pointFor1msCatchDelay = 0.909; // user has got 1.1 second to obtain any points otherwise grease 'minimumPointsPerCatch'
     let userPoints = 0;
 
     // When application was mounted
