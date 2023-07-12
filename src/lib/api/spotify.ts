@@ -11,7 +11,12 @@ interface SpotifyAPIAuthData {
     refresh_token: string
 }
 
-/** Initialize user authentication in order to obtain "authtoken" for API next calls */
+/** 
+ * Initialize user authentication in order to obtain **"authtoken"** for API next calls.
+ * This is first stage for authenticate user on **Spotify API**.
+ * After take user to Spotify authorization page (what is aim this) when all went great user will be redirected to root application page ("/")
+ * with specified search params (/?auth_search_params_are_here) to allow him, to make next steps in order to be 'Authenticated on Spotify API' 
+*/
 export function spotifyInitializeUserAuthentication() {
     page.subscribe(s => {
         const authenticationOptions = s.data.spotifyAuthUrlParams;

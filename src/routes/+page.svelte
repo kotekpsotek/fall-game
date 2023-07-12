@@ -25,7 +25,7 @@
 
     // Make next steps to authenticate user in 'Spotify API'
     const url = new URL(document.URL);
-    if (url.search.length) {
+    if (url.search.length) { // Whole Task is making durning when user was redirected from Spotify API first authentication step. In this step Spotify API Authentication Token will be downloaded from spotify
         const callback = url.searchParams.get("callback");
         const code = url.searchParams.get("code");
 
