@@ -161,6 +161,10 @@ fn main() {
           .expect("Could not show 'Native Window Menu Bar'");
       });
       
+      // Maximize window size to full screen
+      main_window.maximize()
+        .unwrap();
+
       Ok(())
     })
     .run(tauri::generate_context!())
