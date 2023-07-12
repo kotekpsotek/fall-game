@@ -32,8 +32,8 @@ fn get_coords(window: tauri::Window) -> (u32, u32) {
 }
 
 #[tauri::command]
-fn game_end(userPoints: u32) -> Result<(), ()> {
-  let game = GameRecord { points: userPoints, ..Default::default() };
+fn game_end(userPoints: u32, gameTime: u64, gameStartTime: u64) -> Result<(), ()> {
+  let game = GameRecord { points: userPoints, game_time: gameTime, start_time: gameStartTime };
 
   // Read from file
   let act_file_cnt = fs::read_to_string("game.json")
@@ -93,6 +93,7 @@ impl AppMenu {
   }
 }
 
+/// Create **System Tray Menu**
 struct AppTrayMenu;
 impl AppTrayMenu {
   /// Create system tray menu element

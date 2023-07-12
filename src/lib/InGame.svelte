@@ -92,7 +92,7 @@
         if (ctrlKey && which == 32) pauseResume();
     });
 
-    // Listen for Initialize Pause from outside snippest calls
+    // Listen for Initialize Pause from outside (regards to this component) snippest calls
     window.addEventListener("pause-init-outside", () => {
         pauseResume();
     });
@@ -103,8 +103,12 @@
 
         // Game main acts
         let int: NodeJS.Timer;
+        let gameStartTime = Date.now();
         const addInt = () => int = setInterval(addHeart, newAdditionPeriodMs);
         const commonEndGameActivities = async () => {
+            // End game raise up time of game calculations and reset game start time
+            const gameTime = Date.now() - gameStartTime;
+            
             // Clear addition loop
             clearInterval(int);
             
@@ -115,7 +119,7 @@
             gameContext.innerHTML = "";
 
             // Display User points, Add it for "games records" and clear it
-            await invoke("game_end", { userPoints }); // Add points
+            await invoke("game_end", { userPoints, gameTime, gameStartTime }); // Add points
 
             // Inform backend that user ends actual the game
             const _showNativeWindowMenuBar = await emit("user-out-of-game");
