@@ -93,14 +93,51 @@ impl AppMenu {
   }
 }
 
+struct AppTrayMenu;
+impl AppTrayMenu {
+  /// Create system tray menu element
+  fn create() -> SystemTray {
+    let item_gameScores = CustomMenuItem::new("scores", "Games Scores");
+    let tray_menu = SystemTrayMenu::new()
+      .add_item(item_gameScores);
+    SystemTray::new()
+      .with_menu(tray_menu)
+  }
+
+  /// Handle click on Tray Menu Item
+  fn handle_event(app: &tauri::AppHandle, event: tauri::SystemTrayEvent) {
+    match event {
+      tauri::SystemTrayEvent::MenuItemClick { tray_id: _, id, .. } => {
+        match id.as_str() {
+          // When user have hope to see it's game scores, will be see 
+          "scores" => {
+            let game_scores = get_game_scores();
+
+            app.get_window("main")
+              .expect(r#"Could not get "main" window"#)
+              .emit("show-scores-menu", &game_scores)
+              .unwrap()
+          },
+          // What ever else is handled by this 'commont' shoulder
+          _ => ()
+        };
+      },
+      _ => ()
+    };
+  }
+}
+
 fn main() {
   use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit };
 
   
   let window_menu = AppMenu::create();
+  let system_tray = AppTrayMenu::create();
   tauri::Builder::default()
     .menu(window_menu)
     .on_menu_event(AppMenu::handle_event)
+    .system_tray(system_tray)
+    .on_system_tray_event(AppTrayMenu::handle_event)
     .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit])
     .setup(|app| {
       // Here are defined things by which program walk throught durning application setup to run
