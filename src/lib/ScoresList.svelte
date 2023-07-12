@@ -5,10 +5,34 @@
     export let scores: GameRecord[];
 
     const dsp = createEventDispatcher();
+
+    /** @description Get string representing game duration time with maximum accuracy to seconds and minimum to hours */
+    function getGameDuration(gameTime: number): string {
+        const date = new Date(gameTime);
+        let tf = "";
+
+        if (date.getFullYear() == new Date().getFullYear() && date.getHours()) {
+            tf += date.getHours() + " hr ";
+        }
+
+        if (date.getMinutes()) {
+            tf += date.getMinutes() + " min ";
+        }
+
+        if (date.getSeconds()) {
+            tf += date.getSeconds() + " sec "
+        }
+
+        if (!tf.trim().length) {
+            tf += "Invalid Game Duration Time"
+        }
+
+        return tf.trim();
+    }
 </script>
 
 <div class="scores-menu-layout">
-    <button class="close" on:click={_ => dsp("terminate")}>
+    <button class="close" on:click={_ => dsp("terminate")} title="Close menu">
         <Close size={28} fill="white"/>
     </button>
     
@@ -27,7 +51,7 @@
                         <p class="date-time">{new Date(start_time + game_time).toLocaleTimeString("en-En")}</p>
                     </td>
                     <td class="game-duration">
-                        <p>{game_time}</p>
+                        <p>{getGameDuration(game_time)}</p>
                     </td>
                     <td class="points">
                         {points} pts
