@@ -42,3 +42,8 @@ pub fn get_rotation_degrees() -> u8 {
 pub fn quit(app_handle: tauri::AppHandle) {
     app_handle.exit(0);
 }
+
+#[tauri::command]
+pub fn online_game_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}

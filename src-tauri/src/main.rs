@@ -129,7 +129,7 @@ impl AppTrayMenu {
 }
 
 fn main() {
-  use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit };
+  use commands_src::{ save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit, online_game_id };
 
   
   let window_menu = AppMenu::create();
@@ -139,7 +139,7 @@ fn main() {
     .on_menu_event(AppMenu::handle_event)
     .system_tray(system_tray)
     .on_system_tray_event(AppTrayMenu::handle_event)
-    .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit])
+    .invoke_handler(generate_handler![hello_to_you, get_coords, game_end, save_spotify_auth_datas, load_spotify_auth_datas, get_rotation_degrees, quit, online_game_id])
     .setup(|app| {
       // Here are defined things by which program walk throught durning application setup to run
       let main_window = app.get_window("main")
