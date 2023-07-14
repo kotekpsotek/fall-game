@@ -11,6 +11,7 @@
     // import Greet from "../lib/Greet.svelte";
     import InGame from "$lib/InGame.svelte";
     import MusicPickMenu from "$lib/MusicPickMenu.svelte";
+    import OnlineGame from "$lib/OnlineGame.svelte";
 
     // Assign to "spotifyIframeAPI" Spotify Iframe API object thus give access to that
     (async () => {
@@ -23,7 +24,7 @@
         $spotifyIframeAPI = await spotifyIframeAPIInit;
     })();
 
-    type ToDisplay = { status: "quick game" | "scores list" | null, changeStatus: (to: ToDisplay["status"]) => void };
+    type ToDisplay = { status: "quick game" | "scores list" | "online" | null, changeStatus: (to: ToDisplay["status"]) => void };
 
     let toDisplay: ToDisplay = { 
         status: null,
@@ -177,12 +178,15 @@
         <InGame on:end={ev => toDisplay.changeStatus(null)} on:renew={ev => toDisplay.changeStatus("quick game")}/>
     {:else if toDisplay.status == "scores list"}
         <ScoresList {scores} on:terminate={_ => toDisplay.changeStatus(null)}/>
+    {:else if toDisplay.status == "online"}
+        <OnlineGame/>
     {:else if !toDisplay.status && !$gameEndScreenDisplaying}
         <div class="app-layout-menu">
             <div class="menu-enclosing">
                 <h2>Game Menu</h2>
                 <div class="menu">
                     <button on:click={ev => toDisplay.changeStatus("quick game")}>Quick game</button>
+                    <button on:click={ev => toDisplay.changeStatus("online")}>Online Game</button>
                     <button class="quit-button" on:click={_ => quit()} title="Quit from appliaction">Quit</button>
                 </div>
             </div>
