@@ -42,5 +42,5 @@ describe("peer-2-peer", () => {
         services.pubsub.addEventListener("message", (evt) => {
             console.log("Message recived");
         })
-    })
+    });
 })
