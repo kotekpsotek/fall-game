@@ -1,13 +1,42 @@
 <script lang="ts">
-   let gameId: string = ""
+    import { invoke } from "@tauri-apps/api";
+    import { io } from "socket.io-client";
 
-   function createGame() {
+    let gameId: string = ""
 
-   }
+    const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
+    const remoteConnection = new RTCPeerConnection(configuration);
+    const socketio = io("http://localhost:8080");
 
-   function joinToGame() {
+    type SignalReceivedEvent = { type: "offer" | "answer", content: any };
+    socketio.on("signal-recived", ({ type, content }: SignalReceivedEvent) => {
+        // TODO: 
+    });
+   
+    /// Create game
+    async function createGame() {
+        const offer = await remoteConnection.createOffer();
+        await remoteConnection.setLocalDescription(offer);
 
-   }
+        // Generate game id
+        gameId = await invoke("online_game_id");
+
+        // Create room with specified gameId
+        socketio.emit("special-signal", "create-room", gameId, (result: boolean) => {
+            if (!result) {
+                throw new Error("Generated Room ID already exists!")
+            };
+        });
+
+        // Send offer to remote peers
+        socketio.emit("signal", { type: "offer", content: offer, roomId: gameId }, (result: boolean) => {
+            if (!result) throw new Error("Couldn't send offer signal")
+        });
+    }
+    
+    function joinToGame() {
+    
+    }
 </script>
 
 <div class="inside">
