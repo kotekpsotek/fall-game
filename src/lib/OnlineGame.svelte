@@ -5,106 +5,60 @@
     let gameId: string = ""
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
-    const remoteConnection = new RTCPeerConnection(configuration);
-    const socketio = io("http://localhost:8080");
+    const rc = new RTCPeerConnection(configuration);
+    const so = io("http://localhost:8080");
+    let dataChannel: { channel?: RTCDataChannel, listener: () => void } = { 
+        listener() {
+            this.channel!.onopen = () => console.log("Data channel is open");
+            this.channel!.onmessage = ({ data }) => console.log("Message content is: " + data);
+        } 
+    };
 
-    // When new iceCandidate is captured
-    remoteConnection.addEventListener("icecandidate", ({ candidate }) => {
-        const { type } = remoteConnection.localDescription!;
-        
-        // Local description
-        const localDescription = remoteConnection.localDescription;
-        
-        // Send made localDescripton to other peers gathered in same room
-        socketio.emit("new-candidate", gameId, localDescription);
-    });
+    rc.onicecandidate = (candidate) => {
+        so.emit("signal", rc.localDescription); // send offer/answer
+    };
 
-    socketio.on("offer", async (offer) => {
-        // Remote Description
-        await remoteConnection.setRemoteDescription(offer);
+    so.on("signal-recv", async (signal) => {
+        console.log(signal)
+        if (signal.type == "offer") {
+            await rc.setRemoteDescription(signal);
 
-        // Answer for offer Initialized
-        const answer = await remoteConnection.createAnswer();
-        const _remoteDescription = await remoteConnection.setRemoteDescription(answer);
-
-        // Send answer 
-        socketio.emit("answer", gameId, answer);
-    });
-
-    // Add new candidate to candidates list
-    /* socketio.on("update-your-candidates", async (candidate: Object) => {
-        await remoteConnection.addIceCandidate(candidate);
-    });
-
-    // One for handling offers and answers
-    type SignalReceivedEvent = { type: "offer" | "answer", content: any, roomId: string };
-    socketio.on("signal-recived", async ({ type, content, roomId }: SignalReceivedEvent) => {
-        // TODO: 
-        switch (type) {
-            case "offer":
-                // Setup Remote description
-                await remoteConnection.setRemoteDescription(content);
-
-                // Setup Local Description
-                const answer = await remoteConnection.createAnswer();
-                await remoteConnection.setLocalDescription(answer);
-
-                // Send answer
-                socketio.emit("signal", { type: "answer", content: answer, roomId })
-            break;
-
-            case "answer":
-                await remoteConnection.setRemoteDescription(content);
-            break;
+            const answer = await rc.createAnswer();
+            await rc.setLocalDescription(answer);
         }
-    }); */
-   
+        else if (signal.type == "answer") {
+            await rc.setRemoteDescription(signal);
+        }
+    })
+
     /// Create game
     async function createGame() {
-        // Generate game id
-        gameId = await invoke("online_game_id");
-
-        // Create signaling channel
-        socketio.emit("create-channel", gameId, async (status: boolean) => {
-            if (status) {
-                // Create RTC Data Channel
-                const dataChannel = remoteConnection.createDataChannel(gameId);
-                dataChannel.onmessage = ({ data: messageContent }) => {
-                    // TODO: 
-                };
+        // gameId = await invoke("online_game_id");
+        dataChannel.channel = rc.createDataChannel(gameId);
+        dataChannel.listener();
         
-                // Create Offer
-                const offer = await remoteConnection.createOffer();
-                const _localDescription = await remoteConnection.setLocalDescription(offer); 
-            }
-        });
-
-        /* const offer = await remoteConnection.createOffer();
-        await remoteConnection.setLocalDescription(offer);
-
-
-        // Create room with specified gameId
-        socketio.emit("special-signal", "create-room", gameId, (result: boolean) => {
-            if (!result) {
-                throw new Error("Generated Room ID already exists!")
-            };
-        });
-
-        // Send offer to remote peers
-        socketio.emit("signal", { type: "offer", content: offer, roomId: gameId }, (result: boolean) => {
-            if (!result) throw new Error("Couldn't send offer signal")
-        }); */
+        so.emit("room", "create"); // Create room
+        const offer = await rc.createOffer();
+        await rc.setLocalDescription(offer);
     }
     
     /// Action join to game
-    function joinToGame() {
-        // Gather in signaling server game room
-        socketio.emit("special-signal", "join-to-room", gameId, (result: boolean) => {
-            if (!result) console.warn("Game with passed identifier doesn't exists!");
+    async function joinToGame() {
+        rc.ondatachannel = (c) => {
+            dataChannel.channel = c.channel;
+            dataChannel.listener();
+            dataChannel.channel?.send("Hello here!")
+        };
+
+
+        so.emit("room", "join", async (offers: RTCSessionDescriptionInit[]) => {
+            // Add offerts
+            offers.forEach(async offer => await rc.setRemoteDescription(offer));
+
+            // Prepare answer
+            const answer = await rc.createAnswer();
+            await rc.setLocalDescription(answer);
         });
-
-        // Send offer
-
     }
 </script>
 

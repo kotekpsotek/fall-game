@@ -12,42 +12,32 @@ const wss = new Server(httpServer, {
 });
 
 const signalRoomsContent = new Map();
+const offers = [];
 
 wss.on("connection", socket => {
-    // FIXME: this is only for developement process REMOVE for production
-    console.log(socket.id + " is connected!")
+    const unvRoomName = "abc123456789";
     
-    // Map rooms to form of array
-    const sRooms = [];
-    for (const room of socket.rooms.keys()) {
-        sRooms.push(room);
-    }
-
-    // Receive information about new candidate
-    socket.on("new-candidate", (roomId, candData) => {
-        if (sRooms.includes(roomId)) {
-            // Add new candidate to room candidates list
-            if (candData.type == "offer" && signalRoomsContent.has(roomId)) {
-                const roomData = signalRoomsContent.get(roomId);
-                signalRoomsContent.set(roomId, [...roomData, candData]);
-            };
-    
-            // Pass data further: offer/answer event
-            socket.in(roomId).emit(candData.type, candData);
+    // Room
+    socket.on("room", (action, cb) => {
+        switch (action) {
+            case "create":
+                socket.join(unvRoomName);
+            break
+            case "join":
+                socket.join(unvRoomName);
+                cb(offers)
+            break;
         }
     })
 
-    // Creating signaling channel
-    socket.on("create-channel", (roomId, result) => {
-        if (signalRoomsContent.has(roomId)) {
-            signalRoomsContent.set(roomId, []);
-            socket.join(roomId);
-            result(true);
-        }
-        else result(false);
-    })
-    
-
+    // Signal
+    socket.on("signal", (data) => {
+        if (data.type == "offer") {
+            offers.push(data);
+        };
+        
+        socket.in(unvRoomName).emit("signal-recv", data);
+    });
 });
 
 httpServer.listen(8080, () => {
