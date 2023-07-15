@@ -10,16 +10,33 @@
 
     // When new iceCandidate is captured
     remoteConnection.addEventListener("icecandidate", ({ candidate }) => {
-        if (candidate) {
-            socketio.emit("new-ice-candidate", candidate, gameId);
-        };
+        const { type } = remoteConnection.localDescription!;
+        
+        // Local description
+        const localDescription = remoteConnection.localDescription;
+        
+        // Send made localDescripton to other peers gathered in same room
+        socketio.emit("new-candidate", gameId, localDescription);
+    });
+
+    socketio.on("offer", async (offer) => {
+        // Remote Description
+        await remoteConnection.setRemoteDescription(offer);
+
+        // Answer for offer Initialized
+        const answer = await remoteConnection.createAnswer();
+        const _remoteDescription = await remoteConnection.setRemoteDescription(answer);
+
+        // Send answer 
+        socketio.emit("answer", gameId, answer);
     });
 
     // Add new candidate to candidates list
-    socketio.on("update-your-candidates", async (candidate: Object) => {
+    /* socketio.on("update-your-candidates", async (candidate: Object) => {
         await remoteConnection.addIceCandidate(candidate);
     });
 
+    // One for handling offers and answers
     type SignalReceivedEvent = { type: "offer" | "answer", content: any, roomId: string };
     socketio.on("signal-recived", async ({ type, content, roomId }: SignalReceivedEvent) => {
         // TODO: 
@@ -40,15 +57,31 @@
                 await remoteConnection.setRemoteDescription(content);
             break;
         }
-    });
+    }); */
    
     /// Create game
     async function createGame() {
-        const offer = await remoteConnection.createOffer();
-        await remoteConnection.setLocalDescription(offer);
-
         // Generate game id
         gameId = await invoke("online_game_id");
+
+        // Create signaling channel
+        socketio.emit("create-channel", gameId, async (status: boolean) => {
+            if (status) {
+                // Create RTC Data Channel
+                const dataChannel = remoteConnection.createDataChannel(gameId);
+                dataChannel.onmessage = ({ data: messageContent }) => {
+                    // TODO: 
+                };
+        
+                // Create Offer
+                const offer = await remoteConnection.createOffer();
+                const _localDescription = await remoteConnection.setLocalDescription(offer); 
+            }
+        });
+
+        /* const offer = await remoteConnection.createOffer();
+        await remoteConnection.setLocalDescription(offer);
+
 
         // Create room with specified gameId
         socketio.emit("special-signal", "create-room", gameId, (result: boolean) => {
@@ -60,7 +93,7 @@
         // Send offer to remote peers
         socketio.emit("signal", { type: "offer", content: offer, roomId: gameId }, (result: boolean) => {
             if (!result) throw new Error("Couldn't send offer signal")
-        });
+        }); */
     }
     
     /// Action join to game
@@ -69,6 +102,9 @@
         socketio.emit("special-signal", "join-to-room", gameId, (result: boolean) => {
             if (!result) console.warn("Game with passed identifier doesn't exists!");
         });
+
+        // Send offer
+
     }
 </script>
 

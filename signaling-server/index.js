@@ -23,66 +23,31 @@ wss.on("connection", socket => {
         sRooms.push(room);
     }
 
-    // Receive signal unique and not ambiguous for this service
-    socket.on("special-signal", (type, roomId, result) => {
-        switch (type) {
-            // Create room with specific id
-            case "create-room":
-                if (!signalRoomsContent.has(roomId)) {
-                    signalRoomsContent.set(roomId, []);
-                    result(true);
-                }
-                else result(false);
-            break;
-
-            // Join to room having determined identifier
-            case "join-to-room":
-                if (sRooms.includes(roomId)) {
-                    socket.join(roomId);
-                    result(true, signalRoomsContent.get(roomId))
-                }
-                else result(false);
-            break;
+    // Receive information about new candidate
+    socket.on("new-candidate", (roomId, candData) => {
+        if (sRooms.includes(roomId)) {
+            // Add new candidate to room candidates list
+            if (candData.type == "offer" && signalRoomsContent.has(roomId)) {
+                const roomData = signalRoomsContent.get(roomId);
+                signalRoomsContent.set(roomId, [...roomData, candData]);
+            };
+    
+            // Pass data further: offer/answer event
+            socket.in(roomId).emit(candData.type, candData);
         }
     })
-    
-    // Recive signal typical for WebRTC signaling server and send back to same channel
-    socket.on("signal", (signal, result) => {
-        const { type, content, roomId } = signal;
 
-        switch (type) {
-            case "offer":
-            case "answer":
-                // Down when recived room isn't on rooms content list
-                if (!signalRoomsContent.has(roomId)) {
-                    signalRoomsContent.set(roomId, []);
-                };
-        
-                // Down when user isn't in recived room
-                if (!sRooms.includes(roomId)) {
-                    signalRoomsContent.set(roomId, []);
-                    socket.join(roomId);
-                };
-        
-                // Emit callback to room
-                socket.in(roomId).emit("signal-recived", signal);
-
-                result(true);
-            break;
-
-            default:
-                result(false)
+    // Creating signaling channel
+    socket.on("create-channel", (roomId, result) => {
+        if (signalRoomsContent.has(roomId)) {
+            signalRoomsContent.set(roomId, []);
+            socket.join(roomId);
+            result(true);
         }
-    });
+        else result(false);
+    })
+    
 
-    // Listen for new candidate to gather it in room
-    socket.on("new-ice-candidate", (candidate, roomId) => {
-        const room = signalRoomsContent.get(roomId);
-        if (room && room.includes(roomId)) {
-            signalRoomsContent.set(roomId, [...room, candidate]);
-            socket.in(roomId).emit("update-your-candidates", candidate);
-        };
-    });
 });
 
 httpServer.listen(8080, () => {
