@@ -37,9 +37,9 @@ wss.on("connection", socket => {
 
             // Join to room having determined identifier
             case "join-to-room":
-                if (sRooms.has(roomId)) {
+                if (sRooms.includes(roomId)) {
                     socket.join(roomId);
-                    socket.in(roomId).emit("new-room-user");
+                    result(true, signalRoomsContent.get(roomId))
                 }
                 else result(false);
             break;
@@ -73,6 +73,15 @@ wss.on("connection", socket => {
             default:
                 result(false)
         }
+    });
+
+    // Listen for new candidate to gather it in room
+    socket.on("new-ice-candidate", (candidate, roomId) => {
+        const room = signalRoomsContent.get(roomId);
+        if (room && room.includes(roomId)) {
+            signalRoomsContent.set(roomId, [...room, candidate]);
+            socket.in(roomId).emit("update-your-candidates", candidate);
+        };
     });
 });
 

@@ -8,9 +8,38 @@
     const remoteConnection = new RTCPeerConnection(configuration);
     const socketio = io("http://localhost:8080");
 
-    type SignalReceivedEvent = { type: "offer" | "answer", content: any };
-    socketio.on("signal-recived", ({ type, content }: SignalReceivedEvent) => {
+    // When new iceCandidate is captured
+    remoteConnection.addEventListener("icecandidate", ({ candidate }) => {
+        if (candidate) {
+            socketio.emit("new-ice-candidate", candidate, gameId);
+        };
+    });
+
+    // Add new candidate to candidates list
+    socketio.on("update-your-candidates", async (candidate: Object) => {
+        await remoteConnection.addIceCandidate(candidate);
+    });
+
+    type SignalReceivedEvent = { type: "offer" | "answer", content: any, roomId: string };
+    socketio.on("signal-recived", async ({ type, content, roomId }: SignalReceivedEvent) => {
         // TODO: 
+        switch (type) {
+            case "offer":
+                // Setup Remote description
+                await remoteConnection.setRemoteDescription(content);
+
+                // Setup Local Description
+                const answer = await remoteConnection.createAnswer();
+                await remoteConnection.setLocalDescription(answer);
+
+                // Send answer
+                socketio.emit("signal", { type: "answer", content: answer, roomId })
+            break;
+
+            case "answer":
+                await remoteConnection.setRemoteDescription(content);
+            break;
+        }
     });
    
     /// Create game
