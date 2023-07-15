@@ -34,6 +34,15 @@ wss.on("connection", socket => {
                 }
                 else result(false);
             break;
+
+            // Join to room having determined identifier
+            case "join-to-room":
+                if (sRooms.has(roomId)) {
+                    socket.join(roomId);
+                    socket.in(roomId).emit("new-room-user");
+                }
+                else result(false);
+            break;
         }
     })
     
@@ -56,7 +65,6 @@ wss.on("connection", socket => {
                 };
         
                 // Emit callback to room
-                delete signal.roomId;
                 socket.in(roomId).emit("signal-recived", signal);
 
                 result(true);

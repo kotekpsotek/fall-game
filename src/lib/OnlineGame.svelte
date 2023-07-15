@@ -34,8 +34,12 @@
         });
     }
     
+    /// Action join to game
     function joinToGame() {
-    
+        // Gather in signaling server game room
+        socketio.emit("special-signal", "join-to-room", gameId, (result: boolean) => {
+            if (!result) console.warn("Game with passed identifier doesn't exists!");
+        });
     }
 </script>
 
