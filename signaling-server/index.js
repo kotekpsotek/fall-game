@@ -11,32 +11,44 @@ const wss = new Server(httpServer, {
     }
 });
 
+// Store content for signaling rooms
 const signalRoomsContent = new Map();
-const offers = [];
 
 wss.on("connection", socket => {
-    const unvRoomName = "abc123456789";
-    
     // Room
-    socket.on("room", (action, cb) => {
+    socket.on("room", (action, roomId, cb) => {
         switch (action) {
             case "create":
-                socket.join(unvRoomName);
+                if (!signalRoomsContent.has(roomId)) {
+                    socket.join(roomId);
+                    signalRoomsContent.set(roomId, []);
+                }
             break
             case "join":
-                socket.join(unvRoomName);
-                cb(offers)
+                const srOffers = signalRoomsContent.get(roomId);
+
+                if (srOffers) {
+                    socket.join(roomId);
+                    cb(srOffers);
+                }
             break;
         }
     })
 
     // Signal
-    socket.on("signal", (data) => {
-        if (data.type == "offer") {
+    socket.on("signal", (data, roomId) => {
+        if (data.type == "offer") { // Create signaling room or update it content
+            // Get room offers
+            const offers = signalRoomsContent.get(roomId) || [];
+
+            // Modify offers
             offers.push(data);
+            
+            // Update offers
+            signalRoomsContent.set(roomId, offers);
         };
         
-        socket.in(unvRoomName).emit("signal-recv", data);
+        socket.in(roomId).emit("signal-recv", data);
     });
 });
 

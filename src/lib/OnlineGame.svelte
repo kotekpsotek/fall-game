@@ -7,7 +7,7 @@
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
     const rc = new RTCPeerConnection(configuration);
     const so = io("http://localhost:8080");
-    let dataChannel: { channel?: RTCDataChannel, listener: () => void } = { 
+    let dataChannel: { channel?: RTCDataChannel, listener: () => void } = { // TODO: send message function with full online cover
         listener() {
             this.channel!.onopen = () => console.log("Data channel is open");
             this.channel!.onmessage = ({ data }) => console.log("Message content is: " + data);
@@ -19,7 +19,6 @@
     };
 
     so.on("signal-recv", async (signal) => {
-        console.log(signal)
         if (signal.type == "offer") {
             await rc.setRemoteDescription(signal);
 
@@ -33,32 +32,39 @@
 
     /// Create game
     async function createGame() {
-        // gameId = await invoke("online_game_id");
+        gameId = await invoke("online_game_id");
         dataChannel.channel = rc.createDataChannel(gameId);
         dataChannel.listener();
         
-        so.emit("room", "create"); // Create room
+        so.emit("room", "create", gameId); // Create room
         const offer = await rc.createOffer();
         await rc.setLocalDescription(offer);
     }
     
     /// Action join to game
     async function joinToGame() {
-        rc.ondatachannel = (c) => {
-            dataChannel.channel = c.channel;
-            dataChannel.listener();
-            dataChannel.channel?.send("Hello here!")
+        const gameId = document.getElementById("game-id");
+        
+        if (!gameId) {
+            console.error("Attach firstly 'game ID' when you would like to join")
+        } else {
+            rc.ondatachannel = (c) => {
+                dataChannel.channel = c.channel;
+                dataChannel.listener();
+                // Here messages can be send
+            };
+    
+    
+            so.emit("room", "join", gameId, async (offers: RTCSessionDescriptionInit[]) => {
+                // Add offerts
+                offers.forEach(async offer => await rc.setRemoteDescription(offer));
+    
+                // Prepare answer
+                const answer = await rc.createAnswer();
+                await rc.setLocalDescription(answer);
+            });
         };
 
-
-        so.emit("room", "join", async (offers: RTCSessionDescriptionInit[]) => {
-            // Add offerts
-            offers.forEach(async offer => await rc.setRemoteDescription(offer));
-
-            // Prepare answer
-            const answer = await rc.createAnswer();
-            await rc.setLocalDescription(answer);
-        });
     }
 </script>
 
@@ -76,7 +82,7 @@
             <div class="join">
                 <h2>Join to game</h2>
                 <div class="inpt">
-                    <input type="text" placeholder="Game identifier">
+                    <input type="text" id="game-id" placeholder="Game identifier">
                     <button on:click={joinToGame}>Join to game</button>
                 </div>
             </div>
