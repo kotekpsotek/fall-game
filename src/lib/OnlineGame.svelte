@@ -1,7 +1,9 @@
 <script lang="ts">
+    import { onMount, onDestroy } from "svelte";
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
     import { UserAvatarFilledAlt, Edit, EditOff } from "carbon-icons-svelte";
+    import { loadProfileData } from "$lib/api/online.game";
     import type { OnlineGame } from "$lib/api/online.types.d";
 
     let gameId: string = "";
@@ -82,6 +84,20 @@
         };
 
     }
+
+    // When module scardfolding was rendered
+    onMount(async () => {
+        const userSelfProfileDatas = await loadProfileData();
+
+        if (userSelfProfileDatas) {
+            onlineGame.userHimselfProfile = userSelfProfileDatas;
+        }
+    });
+
+    // When module was rendered out from app html dom
+    onDestroy(async () => {
+
+    });
 </script>
 
 <div class="inside">
