@@ -2,8 +2,23 @@
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
     import { UserAvatarFilledAlt, Edit, EditOff } from "carbon-icons-svelte";
+    import type { OnlineGame } from "$lib/api/online.types.d";
 
-    let gameId: string = ""
+    let gameId: string = "";
+    const onlineGame: OnlineGame = {
+        userHimselfProfile: {
+            name: "",
+            image_blob: ""
+        },
+        adverseLoverProfile: {
+            name: "",
+            image_blob: ""
+        },
+        editStatuses: {
+            himself: false,
+            adverse: false
+        }
+    };
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
     const rc = new RTCPeerConnection(configuration);
@@ -75,11 +90,19 @@
             <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
         </button>
         <div class="name">
-            <p>Your Name</p>
-            <p>Not specified</p>
+            <p class="desc">Your Name</p>
+            {#if onlineGame.editStatuses.himself}
+                <input type="text" placeholder="Determine new name" bind:value={onlineGame.userHimselfProfile.name}>
+            {:else}
+                <p>{onlineGame.userHimselfProfile.name || "No specified"}</p>
+            {/if}
         </div>
-        <button id="edit">
-            <Edit fill="whitesmoke"/>
+        <button id="edit" on:click={_ => onlineGame.editStatuses.himself = !onlineGame.editStatuses.himself}>
+            {#if onlineGame.editStatuses.himself}
+                <EditOff fill="whitesmoke"/>
+            {:else}
+                <Edit fill="whitesmoke"/>
+            {/if}
         </button>
     </div>
     <div class="before-game">
@@ -169,7 +192,7 @@
         padding-bottom: 5px;
     }
 
-    div.name p:first-of-type {
+    div.name p:first-of-type.desc {
         font-size: 10px;
         text-transform: uppercase;
         font-variant: small-caps;
@@ -177,9 +200,25 @@
         user-select: none;
     }
 
-    div.name p:last-of-type {
+    div.name p:last-of-type:not(.desc) {
         font-size: 18px;
         color: whitesmoke;
+    }
+
+    div.name input[type="text"] {
+        background-color: rgba(0, 0, 0, 0.15);
+        outline: none;
+        border: solid 1px black;
+        font-size: 18px;
+        padding: 5px;
+        padding-left: 1px;
+        padding-right: 1px;
+        color: whitesmoke;
+        caret-color: orangered;
+    }
+
+    div.name > input[type="text"]::placeholder {
+        color: rgba(245, 245, 245, 0.628);
     }
 
     .online-profile > button#edit {
