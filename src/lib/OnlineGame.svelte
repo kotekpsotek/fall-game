@@ -1,6 +1,7 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
+    import { UserAvatarFilledAlt, Edit, EditOff } from "carbon-icons-svelte";
 
     let gameId: string = ""
 
@@ -69,6 +70,18 @@
 </script>
 
 <div class="inside">
+    <div class="online-profile">
+        <button id="profile-img">
+            <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
+        </button>
+        <div class="name">
+            <p>Your Name</p>
+            <p>Not specified</p>
+        </div>
+        <button id="edit">
+            <Edit fill="whitesmoke"/>
+        </button>
+    </div>
     <div class="before-game">
         <div class="game-id-top-notch">
             <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p>
@@ -109,19 +122,75 @@
         width: 100vw;
         height: 100vh;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        row-gap: 10px;
     }
     
+    .inside > div {
+        width: 750px;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+    }
+
     .before-game {
         min-height: 200px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        background-color: rgba(0, 0, 0, 0.5);
-        padding: 10px;
+    }
+
+    .online-profile {
+        height: 150px;
+        display: flex;
+        column-gap: 5px;
+        position: relative;
+    }
+
+    .online-profile > button#profile-img {
+        width: 35%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-right: 5px;
+        border-right: 2px solid black;
+    } 
+
+    .online-profile > div.name {
+        display: flex;
+        flex-direction: column;
+        row-gap: 2px;
+        padding-left: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    div.name p:first-of-type {
+        font-size: 10px;
+        text-transform: uppercase;
+        font-variant: small-caps;
+        color: rgb(214, 212, 212);
+        user-select: none;
+    }
+
+    div.name p:last-of-type {
+        font-size: 18px;
+        color: whitesmoke;
+    }
+
+    .online-profile > button#edit {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        padding: 4px;
+        background-color: black;
+        vertical-align: middle;
+        border: solid 1px whitesmoke;
         border-radius: 4px;
-        box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
     }
 
     .game-id-top-notch {
