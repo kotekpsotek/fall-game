@@ -3,7 +3,7 @@
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
     import { UserAvatarFilledAlt, Edit, EditOff } from "carbon-icons-svelte";
-    import { loadProfileData } from "$lib/api/online.game";
+    import { loadProfileData, saveProfileData } from "$lib/api/online.game";
     import type { OnlineGame } from "$lib/api/online.types.d";
 
     let gameId: string = "";
@@ -87,8 +87,8 @@
 
     // When module scardfolding was rendered
     onMount(async () => {
+        // Load user profile datas from file
         const userSelfProfileDatas = await loadProfileData();
-
         if (userSelfProfileDatas) {
             onlineGame.userHimselfProfile = userSelfProfileDatas;
         }
@@ -96,7 +96,8 @@
 
     // When module was rendered out from app html dom
     onDestroy(async () => {
-
+        // Save user profile datas in file
+        await saveProfileData(onlineGame.userHimselfProfile);
     });
 </script>
 

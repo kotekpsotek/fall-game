@@ -16,7 +16,11 @@
       "iconAsTemplate": true
     },
     "allowlist": {
-      "all": false
+      "all": false,
+      "fs": {
+        "all": true,
+        "scope": ["**"]
+      }
     },
     "bundle": {
       "active": true,
