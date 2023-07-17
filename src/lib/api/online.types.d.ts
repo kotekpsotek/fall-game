@@ -11,8 +11,16 @@ interface OnlineGame {
 }
 
 type OnlineProfileData = OnlineGame["adverseLoverProfile"];
+type MessageTypes = "profile-data";
+
+interface P2PCommunciationMessage<T> {
+    type: MessageTypes,
+    content: T
+}
 
 export {
     type OnlineGame,
-    type OnlineProfileData
+    type OnlineProfileData,
+    type MessageTypes,
+    type P2PCommunciationMessage
 }

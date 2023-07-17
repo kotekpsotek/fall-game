@@ -3,13 +3,15 @@
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
     import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate } from "carbon-icons-svelte";
-    import { loadProfileData, saveProfileData } from "$lib/api/online.game";
-    import type { OnlineGame } from "$lib/api/online.types.d";
+    import { loadProfileData, saveProfileData, OnlineGameCommunication } from "$lib/api/online.game";
+    import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
+    import { parse } from "svelte/compiler";
 
     const dsp = createEventDispatcher();
 
     let gameId: string = "";
     let waithingForIce = false;
+    let communicationManager: OnlineGameCommunication | undefined;
     const onlineGame: OnlineGame = {
         userHimselfProfile: {
             name: "",
@@ -32,10 +34,26 @@
         isOpen: false,
         listener() {
             this.channel!.onopen = () => {
+                // Determine channel as open
                 this.isOpen = true;
-                console.log("Data channel is open");
+
+                // Create communication manager instance
+                communicationManager = new OnlineGameCommunication(this.channel!);
+
+                // Send message with user profile datas
+                communicationManager.messages.send("profile-data", onlineGame["userHimselfProfile"]);
             }
-            this.channel!.onmessage = ({ data }) => console.log("Message content is: " + data);
+
+            // Manage communication events received listener
+            this.channel?.addEventListener("message", ({ data }) => {
+                const parsedData: P2PCommunciationMessage<any> = JSON.parse(data);
+
+                switch(parsedData.type) {
+                    case "profile-data":
+                        onlineGame.adverseLoverProfile = parsedData.content;
+                    break;
+                }
+            })
         } 
     };
 
@@ -158,7 +176,8 @@
         const userSelfProfileDatas = await loadProfileData();
         if (userSelfProfileDatas) {
             onlineGame.userHimselfProfile = userSelfProfileDatas;
-        }
+        };
+
     });
 
     // When module was rendered out from app html dom
