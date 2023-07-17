@@ -241,6 +241,13 @@
         border-right: 2px solid black;
     }
 
+    .online-profile > button#profile-img > img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: black;
+    }
+
     .online-profile > div.name {
         display: flex;
         flex-direction: column;
