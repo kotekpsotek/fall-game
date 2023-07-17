@@ -1,16 +1,16 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher } from "svelte";
+    import { writable } from "svelte/store";
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
     import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate } from "carbon-icons-svelte";
     import { loadProfileData, saveProfileData, OnlineGameCommunication } from "$lib/api/online.game";
     import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
-    import { parse } from "svelte/compiler";
 
     const dsp = createEventDispatcher();
 
     let gameId: string = "";
-    let waithingForIce = false;
+    let storeStatesWithin = writable<"waiting-for-ice" | "new-user-arrived" | null>("new-user-arrived")
     let communicationManager: OnlineGameCommunication | undefined;
     const onlineGame: OnlineGame = {
         userHimselfProfile: {
@@ -50,6 +50,7 @@
 
                 switch(parsedData.type) {
                     case "profile-data":
+                        $storeStatesWithin = "new-user-arrived";
                         onlineGame.adverseLoverProfile = parsedData.content;
                     break;
                 }
@@ -58,7 +59,7 @@
     };
 
     rc.onicecandidate = async ({ candidate }) => {
-        waithingForIce = false;
+        $storeStatesWithin = null;
 
         // Send new candidate to the remote peers
         if (candidate) {
@@ -102,7 +103,9 @@
         // Create offer
         const offer = await rc.createOffer();
         await rc.setLocalDescription(offer);
-        waithingForIce = true;
+
+        // Change internal state
+        $storeStatesWithin = null;
 
         // Send offer
         so.emit("signal", offer, gameId); // send offer/answer
@@ -194,12 +197,26 @@
     <ArrowLeft size={24} fill="white"/>
 </button>
 
-{#if waithingForIce}
+{#if $storeStatesWithin == "waiting-for-ice"}
     <div class="waiting-for-ice">
         <div class="rot">
             <Rotate fill="whitesmoke" size={32}/>
         </div>
         <p>Waiting for prepare your room...</p>
+    </div>
+{:else if $storeStatesWithin == "new-user-arrived"}
+    <!-- Get user determine by himself whether would like to play with arrived -->
+    <div class="back">
+        <div class="user-arrived">
+            <h2>New user <span class="user-name">{onlineGame.adverseLoverProfile.name}</span> arrived! Would you like to play with him?</h2>
+            <div class="user-img">
+                <img src="{onlineGame.adverseLoverProfile.image_blob}" alt="">
+            </div>
+            <div class="decision">
+                <button id="Yes" on:click={_ => { $storeStatesWithin = null }}>Yes</button>
+                <button id="No" on:click={_ => { $storeStatesWithin = null; onlineGame.adverseLoverProfile = { name: '', image_blob: '' } }}>No</button>
+            </div>
+        </div>
     </div>
 {/if}
 
@@ -328,12 +345,6 @@
         align-items: center;
         justify-content: center;
         animation: rotate 500ms linear infinite forwards;
-    }
-
-    @keyframes rotate {
-        to {
-            transform: rotate(360deg);
-        }
     }
 
     .online-profile {
@@ -485,5 +496,77 @@
         text-align: center;
         background-color: black;
         color: orangered;
+    }
+
+    div.back {
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    div.back > div.user-arrived {
+        width: 450px;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 4px;
+        border: solid 1px whitesmoke;
+        box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 15px;
+        display: flex;
+        flex-direction: column;
+        row-gap: 15px;
+    }
+
+    div.user-arrived h2 {
+        text-align: center;
+    }
+
+    div.user-img {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    div.user-img img {
+        width: 100px;
+        height: 100px;
+        object-fit: scale-down;
+        background-color: black;
+        border-radius: 50%;
+    }
+
+    div.user-arrived .decision {
+        display: flex;
+        justify-content: flex-end;
+        column-gap: 10px;
+    }
+
+    .decision button {
+        width: 100px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+
+    .decision button#Yes {
+        background-color: green;
+        color: white;
+    }
+
+    .decision button#No {
+        background-color: red;
+        color: white;
+    }
+
+    @keyframes rotate {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
