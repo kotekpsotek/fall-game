@@ -1,10 +1,12 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, createEventDispatcher } from "svelte";
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
-    import { UserAvatarFilledAlt, Edit, EditOff } from "carbon-icons-svelte";
+    import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft } from "carbon-icons-svelte";
     import { loadProfileData, saveProfileData } from "$lib/api/online.game";
     import type { OnlineGame } from "$lib/api/online.types.d";
+
+    const dsp = createEventDispatcher();
 
     let gameId: string = "";
     const onlineGame: OnlineGame = {
@@ -25,9 +27,13 @@
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
     const rc = new RTCPeerConnection(configuration);
     const so = io("http://localhost:8080");
-    let dataChannel: { channel?: RTCDataChannel, listener: () => void } = { // TODO: send message function with full online cover
+    let dataChannel: { channel?: RTCDataChannel, listener: () => void, isOpen: boolean } = { // TODO: send message function with full online cover
+        isOpen: false,
         listener() {
-            this.channel!.onopen = () => console.log("Data channel is open");
+            this.channel!.onopen = () => {
+                this.isOpen = true;
+                console.log("Data channel is open");
+            }
             this.channel!.onmessage = ({ data }) => console.log("Message content is: " + data);
         } 
     };
@@ -135,6 +141,10 @@
     });
 </script>
 
+<button class="go-back" on:click={_ => dsp("go-back")}>
+    <ArrowLeft size={24} fill="white"/>
+</button>
+
 <div class="inside">
     <div class="online-profile">
         <button id="profile-img" on:click={_ => onlineGame.editStatuses.himself ? onlineGame.editStatuses.himself = true : null}>
@@ -193,6 +203,23 @@
 
     button {
         cursor: pointer;
+    }
+
+    button.go-back {
+        width: 40px;
+        height: 40px;
+        position: absolute;
+        top: 10px;
+        left: 5px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border: solid 1px white;
+        border-radius: 50%;
+        overflow: hidden !important;
+        cursor: pointer;
+        z-index: 11;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     h2 {
