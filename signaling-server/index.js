@@ -26,7 +26,7 @@ wss.on("connection", socket => {
             break
             case "join":
                 const srOffers = signalRoomsContent.get(roomId);
-
+                
                 if (srOffers) {
                     socket.join(roomId);
                     cb(srOffers);
@@ -49,6 +49,11 @@ wss.on("connection", socket => {
         };
         
         socket.in(roomId).emit("signal-recv", data);
+    });
+
+    socket.on("candidate", (candidate, roomId) => {
+        console.log(roomId, "Candidate");
+        socket.in(roomId).emit("new-candidate", candidate)
     });
 });
 

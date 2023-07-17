@@ -39,21 +39,33 @@
         } 
     };
 
-    rc.onicecandidate = async (candidate) => {
+    rc.onicecandidate = async ({ candidate }) => {
         waithingForIce = false;
 
-        console.log(candidate.candidate)
-        await rc.addIceCandidate(candidate.candidate || undefined)
-
-        so.emit("signal", rc.localDescription, gameId); // send offer/answer
+        // Send new candidate to the remote peers
+        if (candidate) {
+            const can = JSON.stringify({ can: candidate })
+            so.emit("candidate", can, gameId);
+        }
     };
+
+    // When new remote candidate is received
+    so.on("new-candidate", async (candidate) => {
+        const can = JSON.parse(candidate).can;
+        await rc.addIceCandidate(can);
+    });
 
     so.on("signal-recv", async (signal) => {
         if (signal.type == "offer") {
+            // Setup offer as remote descriptiom
             await rc.setRemoteDescription(signal);
 
+            // Create answer
             const answer = await rc.createAnswer();
             await rc.setLocalDescription(answer);
+
+            // Send answer
+            so.emit("signal", answer, gameId); // send offer/answer
         }
         else if (signal.type == "answer") {
             await rc.setRemoteDescription(signal);
@@ -68,9 +80,14 @@
         dataChannel.listener();
         
         so.emit("room", "create", gameId); // Create room
+
+        // Create offer
         const offer = await rc.createOffer();
         await rc.setLocalDescription(offer);
         waithingForIce = true;
+
+        // Send offer
+        so.emit("signal", offer, gameId); // send offer/answer
     }
     
     /// Action join to game
@@ -81,20 +98,21 @@
             console.error("Attach firstly 'game ID' when you would like to join")
         } else {
             rc.ondatachannel = (c) => {
-                /* dataChannel.channel = c.channel;
+                dataChannel.channel = c.channel;
                 dataChannel.listener();
-                // Here messages can be send */
-                console.log("Data channel created")
+                // Here messages can be send
             };
     
             so.emit("room", "join", gameId, async (offers: RTCSessionDescriptionInit[]) => {
                 // Add offerts
-                console.log(offers, gameId)
                 offers.forEach(async offer => await rc.setRemoteDescription(offer));
     
                 // Prepare answer
                 const answer = await rc.createAnswer();
                 await rc.setLocalDescription(answer);
+
+                // Send answer
+                so.emit("signal", answer, gameId); // send offer/answer
             });
         };
 
