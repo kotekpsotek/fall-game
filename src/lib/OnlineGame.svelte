@@ -2,13 +2,14 @@
     import { onMount, onDestroy, createEventDispatcher } from "svelte";
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
-    import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft } from "carbon-icons-svelte";
+    import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate } from "carbon-icons-svelte";
     import { loadProfileData, saveProfileData } from "$lib/api/online.game";
     import type { OnlineGame } from "$lib/api/online.types.d";
 
     const dsp = createEventDispatcher();
 
     let gameId: string = "";
+    let waithingForIce = false;
     const onlineGame: OnlineGame = {
         userHimselfProfile: {
             name: "",
@@ -38,8 +39,13 @@
         } 
     };
 
-    rc.onicecandidate = (candidate) => {
-        so.emit("signal", rc.localDescription); // send offer/answer
+    rc.onicecandidate = async (candidate) => {
+        waithingForIce = false;
+
+        console.log(candidate.candidate)
+        await rc.addIceCandidate(candidate.candidate || undefined)
+
+        so.emit("signal", rc.localDescription, gameId); // send offer/answer
     };
 
     so.on("signal-recv", async (signal) => {
@@ -51,6 +57,7 @@
         }
         else if (signal.type == "answer") {
             await rc.setRemoteDescription(signal);
+            console.log("Remote description setted up");
         }
     })
 
@@ -63,24 +70,26 @@
         so.emit("room", "create", gameId); // Create room
         const offer = await rc.createOffer();
         await rc.setLocalDescription(offer);
+        waithingForIce = true;
     }
     
     /// Action join to game
     async function joinToGame() {
-        const gameId = document.getElementById("game-id");
+        gameId = (document.getElementById("game-id") as HTMLInputElement).value;
         
         if (!gameId) {
             console.error("Attach firstly 'game ID' when you would like to join")
         } else {
             rc.ondatachannel = (c) => {
-                dataChannel.channel = c.channel;
+                /* dataChannel.channel = c.channel;
                 dataChannel.listener();
-                // Here messages can be send
+                // Here messages can be send */
+                console.log("Data channel created")
             };
-    
     
             so.emit("room", "join", gameId, async (offers: RTCSessionDescriptionInit[]) => {
                 // Add offerts
+                console.log(offers, gameId)
                 offers.forEach(async offer => await rc.setRemoteDescription(offer));
     
                 // Prepare answer
@@ -144,6 +153,15 @@
 <button class="go-back" on:click={_ => dsp("go-back")}>
     <ArrowLeft size={24} fill="white"/>
 </button>
+
+{#if waithingForIce}
+    <div class="waiting-for-ice">
+        <div class="rot">
+            <Rotate fill="whitesmoke" size={32}/>
+        </div>
+        <p>Waiting for prepare your room...</p>
+    </div>
+{/if}
 
 <div class="inside">
     <div class="online-profile">
@@ -249,6 +267,33 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+    }
+
+    div.waiting-for-ice {
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        row-gap: 10px;
+        align-items: center;
+        justify-content: center;
+        color: whitesmoke;
+    }
+
+    div.rot {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: rotate 500ms linear infinite forwards;
+    }
+
+    @keyframes rotate {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .online-profile {
