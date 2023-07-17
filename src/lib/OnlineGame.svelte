@@ -85,6 +85,40 @@
 
     }
 
+    // Svelte Action function
+    function pS(target: HTMLInputElement) {
+        // Initialize click on input[type=file] element
+        const listClick = () => {
+            target.click();
+        }
+        target.parentElement!.addEventListener("click", listClick)
+        
+        // Listen when user pickup file
+        target.addEventListener("change", async (e) => {
+            const file = target!.files![0];
+            const fileImgExt = ["png", "jpg", "jpeg", "webp"];
+
+            if (fileImgExt.includes(file.name.split(".").slice(-1)[0])) {
+                // Convert file to base64 url form
+                const r = new FileReader();
+
+                r.onload = () => {
+                   onlineGame.userHimselfProfile.image_blob = r.result as string;
+                }
+                
+                r.readAsDataURL(file);
+            }
+            else console.warn(`You must attach file which is one from types: ${fileImgExt.join(", ")}`);
+        })
+        
+        // Return object
+        return {
+            destroy() {
+                target.parentElement!.removeEventListener("click", listClick);
+            }
+        };
+    }
+
     // When module scardfolding was rendered
     onMount(async () => {
         // Load user profile datas from file
@@ -103,8 +137,15 @@
 
 <div class="inside">
     <div class="online-profile">
-        <button id="profile-img">
-            <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
+        <button id="profile-img" on:click={_ => onlineGame.editStatuses.himself ? onlineGame.editStatuses.himself = true : null}>
+            {#if !onlineGame.userHimselfProfile.image_blob}
+                <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
+            {:else}
+                <img src="{onlineGame.userHimselfProfile.image_blob}" alt="">
+            {/if}
+            {#if onlineGame.editStatuses.himself}
+                <input type="file" id="profile-image-picker" hidden use:pS>
+            {/if}
         </button>
         <div class="name">
             <p class="desc">Your Name</p>
@@ -198,7 +239,7 @@
         justify-content: center;
         padding-right: 5px;
         border-right: 2px solid black;
-    } 
+    }
 
     .online-profile > div.name {
         display: flex;
