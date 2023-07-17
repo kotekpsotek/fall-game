@@ -138,11 +138,14 @@
 
     // Svelte Action function
     function pS(target: HTMLInputElement) {
-        // Initialize click on input[type=file] element
         const listClick = () => {
             target.click();
         }
-        target.parentElement!.addEventListener("click", listClick)
+
+        const parentElement = target.parentElement!;
+
+        // Initialize click on input[type=file] element
+        parentElement.addEventListener("click", listClick)
         
         // Listen when user pickup file
         target.addEventListener("change", async (e) => {
@@ -154,7 +157,7 @@
                 const r = new FileReader();
 
                 r.onload = () => {
-                   onlineGame.userHimselfProfile.image_blob = r.result as string;
+                    onlineGame.userHimselfProfile.image_blob = r.result as string;
                 }
                 
                 r.readAsDataURL(file);
@@ -165,7 +168,7 @@
         // Return object
         return {
             destroy() {
-                target.parentElement!.removeEventListener("click", listClick);
+                parentElement.removeEventListener("click", listClick);
             }
         };
     }
@@ -202,7 +205,7 @@
 
 <div class="inside">
     <div class="online-profile">
-        <button id="profile-img" on:click={_ => onlineGame.editStatuses.himself ? onlineGame.editStatuses.himself = true : null}>
+        <button id="profile-img" on:click={_ => null}>
             {#if !onlineGame.userHimselfProfile.image_blob}
                 <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
             {:else}
