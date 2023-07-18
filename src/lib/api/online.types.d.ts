@@ -8,11 +8,12 @@ interface OnlineGame {
         himself: boolean,
         adverse: boolean
     },
-    connectionEstablished: boolean
+    connectionEstablished: boolean,
+    bothUserRedinness: 0 | 1 | 2
 }
 
 type OnlineProfileData = OnlineGame["adverseLoverProfile"];
-type MessageTypes = "profile-data" | "no-aceptation";
+type MessageTypes = "profile-data" | "no-aceptation" | "rediness-state";
 
 interface P2PCommunciationMessage<T> {
     type: MessageTypes,

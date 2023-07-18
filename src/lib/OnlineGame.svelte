@@ -26,7 +26,8 @@
             himself: false,
             adverse: false
         },
-        connectionEstablished: false
+        connectionEstablished: false,
+        bothUserRedinness: 0
     };
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -75,6 +76,13 @@
                         noAcceptation.$on("click", () => noAcceptation.$destroy());
 
                         onlineGame.adverseLoverProfile = { image_blob: '', name: '' };
+                    break;
+
+                    // Add rediness state about participation in game
+                    case "rediness-state":
+                        if (onlineGame.bothUserRedinness < 2) {
+                            onlineGame.bothUserRedinness += 1;
+                        }
                     break;
                 }
             })
@@ -179,6 +187,13 @@
         // Remove oposite user from RTC connection
         rc.close();
         gameId = "";
+    }
+
+    // Send rediness state
+    let youAreReady = false;
+    function rediness() {
+        youAreReady = true;
+        communicationManager?.messages.send("rediness-state", {});
     }
 
     // Svelte Action function
@@ -309,6 +324,20 @@
             </div>
         </div>
     </div>
+    {#if onlineGame.connectionEstablished}
+        <!-- Button for erase in 'waiting room' or 'start game' -->
+        <button class="determine-rediness" on:click={rediness}>
+            {#if !onlineGame.bothUserRedinness}
+                {#if !youAreReady}
+                    Determine rediness
+                {:else}
+                    You're ready
+                {/if}
+            {:else if onlineGame.bothUserRedinness == 1}
+                Start Game
+            {/if}
+        </button>
+    {/if}
 </div>
 
 <style>
@@ -540,6 +569,19 @@
         color: orangered;
     }
 
+    button.determine-rediness {
+        height: 35px;
+        width: 750px;
+        padding: 10px;
+        display: flex;        
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border-radius: 4px;
+        font-size: 18px;
+        background-color: rgba(94, 211, 141, 0.902);
+    }
+
     div.back {
         width: 100vw;
         height: 100vh;
@@ -605,7 +647,7 @@
         background-color: red;
         color: white;
     }
-
+    
     @keyframes rotate {
         to {
             transform: rotate(360deg);
