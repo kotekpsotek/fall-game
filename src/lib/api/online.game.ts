@@ -36,8 +36,12 @@ export class MessageSender {
 
     /** Send message throught P2P communication channel */
     send<T>(type: MessageTypes, content: T) {
-        const message = JSON.stringify({ content, type })
-        this.channel.send(message);
+        // Try send message throught channel only when is still open (when is not closed)
+        if (this.channel.readyState == "open") {
+            const message = JSON.stringify({ content, type })
+            this.channel.send(message);
+        }
+        else console.warn("Message not sended");
     }
 }
 

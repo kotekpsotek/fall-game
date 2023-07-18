@@ -7,11 +7,12 @@ interface OnlineGame {
     editStatuses: { 
         himself: boolean,
         adverse: boolean
-    }
+    },
+    connectionEstablished: boolean
 }
 
 type OnlineProfileData = OnlineGame["adverseLoverProfile"];
-type MessageTypes = "profile-data";
+type MessageTypes = "profile-data" | "no-aceptation";
 
 interface P2PCommunciationMessage<T> {
     type: MessageTypes,

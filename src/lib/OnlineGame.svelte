@@ -6,11 +6,12 @@
     import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate } from "carbon-icons-svelte";
     import { loadProfileData, saveProfileData, OnlineGameCommunication } from "$lib/api/online.game";
     import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
+    import OnlineNoAcceptation from "$lib/OnlineNoAcceptation.svelte";
 
     const dsp = createEventDispatcher();
 
     let gameId: string = "";
-    let storeStatesWithin = writable<"waiting-for-ice" | "new-user-arrived" | null>("new-user-arrived")
+    let storeStatesWithin = writable<"waiting-for-ice" | "new-user-arrived" | null>(null)
     let communicationManager: OnlineGameCommunication | undefined;
     const onlineGame: OnlineGame = {
         userHimselfProfile: {
@@ -24,7 +25,8 @@
         editStatuses: {
             himself: false,
             adverse: false
-        }
+        },
+        connectionEstablished: false
     };
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -49,9 +51,30 @@
                 const parsedData: P2PCommunciationMessage<any> = JSON.parse(data);
 
                 switch(parsedData.type) {
+                    // When new user joined to room
                     case "profile-data":
                         $storeStatesWithin = "new-user-arrived";
                         onlineGame.adverseLoverProfile = parsedData.content;
+                    break;
+
+                    // When your participation was not accepted
+                    case "no-aceptation":
+                        // Close RTC connection
+                        rc.close();
+                        gameId = "";
+
+                        // GUI changes onto popups
+                        onlineGame.connectionEstablished = false;
+                        const noAcceptation = new OnlineNoAcceptation({
+                            target: document.body,
+                            props: {
+                                adverseName: onlineGame.adverseLoverProfile.name
+                            }
+                        });
+
+                        noAcceptation.$on("click", () => noAcceptation.$destroy());
+
+                        onlineGame.adverseLoverProfile = { image_blob: '', name: '' };
                     break;
                 }
             })
@@ -139,6 +162,25 @@
 
     }
 
+    // When user decide to approve remote user in competition
+    async function decisionYes() {
+        $storeStatesWithin = null;
+        onlineGame.connectionEstablished = true;
+    }
+
+    // When user decide to not allow remote user for participation
+    async function decisionNo() {
+        $storeStatesWithin = null;
+        onlineGame.adverseLoverProfile = { name: '', image_blob: '' };
+
+        // Send message to adverse
+        communicationManager!.messages.send("no-aceptation", {});
+
+        // Remove oposite user from RTC connection
+        rc.close();
+        gameId = "";
+    }
+
     // Svelte Action function
     function pS(target: HTMLInputElement) {
         const listClick = () => {
@@ -213,8 +255,8 @@
                 <img src="{onlineGame.adverseLoverProfile.image_blob}" alt="">
             </div>
             <div class="decision">
-                <button id="Yes" on:click={_ => { $storeStatesWithin = null }}>Yes</button>
-                <button id="No" on:click={_ => { $storeStatesWithin = null; onlineGame.adverseLoverProfile = { name: '', image_blob: '' } }}>No</button>
+                <button id="Yes" on:click={decisionYes}>Yes</button>
+                <button id="No" on:click={decisionNo}>No</button>
             </div>
         </div>
     </div>
