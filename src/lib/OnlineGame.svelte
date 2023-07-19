@@ -7,6 +7,7 @@
     import { loadProfileData, saveProfileData, OnlineGameCommunication } from "$lib/api/online.game";
     import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
     import OnlineNoAcceptation from "$lib/OnlineNoAcceptation.svelte";
+    import OnlineGameBadge from "$lib/OnlineGameBadge.svelte";
 
     const dsp = createEventDispatcher();
 
@@ -27,7 +28,8 @@
             adverse: false
         },
         connectionEstablished: false,
-        bothUserRedinness: 0
+        bothUserRedinness: 0,
+        gameStatus: "not-initialized"
     };
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -84,14 +86,17 @@
                             const { content: { ready } } = parsedData as P2PCommunciationMessage<{ ready: boolean }>
 
                             if (ready) {
-                                if (onlineGame.bothUserRedinness < 2) {
-                                    onlineGame.bothUserRedinness += 1;
-                                }
+                                onlineGame.bothUserRedinness += 1;
                             }
                             else {
                                 onlineGame.bothUserRedinness >= 1 ? onlineGame.bothUserRedinness -= 1 : [];
                             }
                         }
+                    break;
+
+                    // When oponen of you whose is displaying button "Start game click on" 
+                    case "game-started":
+                        onlineGame.gameStatus = "started";
                     break;
                 }
             })
@@ -198,11 +203,18 @@
         gameId = "";
     }
 
-    // Send ready rediness state
+    // Send ready rediness state or start game
     let youAreReady = false;
     function rediness() {
-        youAreReady = true;
-        communicationManager?.messages.send("rediness-state", { ready: true });
+        // Examine game as "started" when other user is ready and you click on 'Start Game' button
+        if (onlineGame.bothUserRedinness == 1) {
+            onlineGame.gameStatus = "started"; // Setup game status on user as started
+            communicationManager?.messages.send("game-started", {}); // Allow other user to setup game as started
+        } else {
+            // Change rediness status: display your status as 'joined to waiting room' and waiting for other user to start game
+            youAreReady = true;
+            communicationManager?.messages.send("rediness-state", { ready: true });
+        }
     }
 
     // Send unready state about rediness
@@ -296,108 +308,122 @@
     </div>
 {/if}
 
-<div class="inside">
-    <div class="online-profile">
-        <button id="profile-img" on:click={_ => null}>
-            {#if !onlineGame.userHimselfProfile.image_blob}
-                <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
-            {:else}
-                <img src="{onlineGame.userHimselfProfile.image_blob}" alt="">
-            {/if}
-            {#if onlineGame.editStatuses.himself}
-                <input type="file" id="profile-image-picker" hidden use:pS>
-            {/if}
-        </button>
-        <div class="name">
-            <p class="desc">Your Name</p>
-            {#if onlineGame.editStatuses.himself}
-                <input type="text" placeholder="Determine new name" bind:value={onlineGame.userHimselfProfile.name}>
-            {:else}
-                <p>{onlineGame.userHimselfProfile.name || "No specified"}</p>
-            {/if}
+{#if onlineGame.gameStatus == "started"}
+    <div class="both-users-screen">
+        <div class="you">
+            <!-- Screen assigned to you as a user -->
+            <OnlineGameBadge aboutUserDatas={onlineGame.userHimselfProfile} forUserGrade="you"/>
         </div>
-        <button id="edit" on:click={_ => onlineGame.editStatuses.himself = !onlineGame.editStatuses.himself}>
-            {#if onlineGame.editStatuses.himself}
-                <EditOff fill="whitesmoke"/>
-            {:else}
-                <Edit fill="whitesmoke"/>
-            {/if}
-        </button>
+        <div class="competition-member">
+            <!-- Screen assigned to other competitor -->
+            <OnlineGameBadge aboutUserDatas={onlineGame.adverseLoverProfile} forUserGrade="other"/>
+        </div>
     </div>
-    {#if !onlineGame.connectionEstablished}
-        <!-- To establish game connection -->
-        <div class="before-game">
-            <div class="game-id-top-notch">
-                <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p>
-            </div>
-            <div class="decision">
-                <div class="create">
-                    <h2>Create game</h2>
-                    <p class="game-id">{gameId}</p>
-                    <button on:click={createGame}>Make new</button>
-                </div>
-                <div class="join">
-                    <h2>Join to game</h2>
-                    <div class="inpt">
-                        <input type="text" id="game-id" placeholder="Game identifier">
-                        <button on:click={joinToGame}>Join to game</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {:else}
-        <!-- About user whose was joined -->
-        <div class="online-profile adverse-competitor">
-            <div id="profile-img">
-                {#if !onlineGame.adverseLoverProfile.image_blob}
+{:else if onlineGame.gameStatus == "not-initialized"}
+    <!-- When new game was not initialized -->
+    <div class="inside">
+        <div class="online-profile">
+            <button id="profile-img" on:click={_ => null}>
+                {#if !onlineGame.userHimselfProfile.image_blob}
                     <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
                 {:else}
-                    <img src="{onlineGame.adverseLoverProfile.image_blob}" alt="">
+                    <img src="{onlineGame.userHimselfProfile.image_blob}" alt="">
                 {/if}
-            </div>
+                {#if onlineGame.editStatuses.himself}
+                    <input type="file" id="profile-image-picker" hidden use:pS>
+                {/if}
+            </button>
             <div class="name">
-                <p class="desc">Adverse User Name</p>
-                <p>{onlineGame.adverseLoverProfile.name || "No specified"}</p>
-            </div>
-        </div>
-    {/if}
-    {#if onlineGame.connectionEstablished}
-        <!-- Button for erase in 'waiting room' or 'start game' -->
-        <button class="determine-rediness" class:user-ready={youAreReady} class:start-game={onlineGame.bothUserRedinness == 1} on:click={rediness}>
-            {#if !onlineGame.bothUserRedinness}
-                <!-- When no one user is ready -->
-                {#if !youAreReady}
-                    <!-- When user yourself isn't ready -->
-                    Determine rediness
+                <p class="desc">Your Name</p>
+                {#if onlineGame.editStatuses.himself}
+                    <input type="text" placeholder="Determine new name" bind:value={onlineGame.userHimselfProfile.name}>
                 {:else}
-                    <!-- When user yourself isn ready -->
-                    <div class="ready-declaration">
-                        <p>You're ready</p>
-                    </div>
-                    {#if youAreReady}
-                        <!-- To change state for unready -->
-                        <button id="declare-unready" on:click={redinessLess}>
-                            <Close size={24} fill="whitesmoke"/>
-                            <p>Back to unready</p>
-                        </button>
-                    {/if}
+                    <p>{onlineGame.userHimselfProfile.name || "No specified"}</p>
                 {/if}
-            {:else if onlineGame.bothUserRedinness == 1}
-                <!-- When one user is ready -->
-                Start Game
-            {/if}
-        </button>
-        {#if youAreReady && !onlineGame.bothUserRedinness}
-            <!-- When no one user is ready -->
-            <div class="info-game">
-                <div class="rot">
-                    <Rotate fill="whitesmoke" size={24}/>
+            </div>
+            <button id="edit" on:click={_ => onlineGame.editStatuses.himself = !onlineGame.editStatuses.himself}>
+                {#if onlineGame.editStatuses.himself}
+                    <EditOff fill="whitesmoke"/>
+                {:else}
+                    <Edit fill="whitesmoke"/>
+                {/if}
+            </button>
+        </div>
+        {#if !onlineGame.connectionEstablished}
+            <!-- To establish game connection -->
+            <div class="before-game">
+                <div class="game-id-top-notch">
+                    <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p>
                 </div>
-                <p>Waiting for other user...</p> <!-- TODO: Add text dot animation in svelte -->
+                <div class="decision">
+                    <div class="create">
+                        <h2>Create game</h2>
+                        <p class="game-id">{gameId}</p>
+                        <button on:click={createGame}>Make new</button>
+                    </div>
+                    <div class="join">
+                        <h2>Join to game</h2>
+                        <div class="inpt">
+                            <input type="text" id="game-id" placeholder="Game identifier">
+                            <button on:click={joinToGame}>Join to game</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {:else}
+            <!-- About user whose was joined -->
+            <div class="online-profile adverse-competitor">
+                <div id="profile-img">
+                    {#if !onlineGame.adverseLoverProfile.image_blob}
+                        <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
+                    {:else}
+                        <img src="{onlineGame.adverseLoverProfile.image_blob}" alt="">
+                    {/if}
+                </div>
+                <div class="name">
+                    <p class="desc">Adverse User Name</p>
+                    <p>{onlineGame.adverseLoverProfile.name || "No specified"}</p>
+                </div>
             </div>
         {/if}
-    {/if}
-</div>
+        {#if onlineGame.connectionEstablished}
+            <!-- Button for erase in 'waiting room' or 'start game' -->
+            <button class="determine-rediness" class:user-ready={youAreReady} class:start-game={onlineGame.bothUserRedinness == 1} on:click={rediness}>
+                {#if !onlineGame.bothUserRedinness}
+                    <!-- When no one user is ready -->
+                    {#if !youAreReady}
+                        <!-- When user yourself isn't ready -->
+                        Determine rediness
+                    {:else}
+                        <!-- When user yourself isn ready -->
+                        <div class="ready-declaration">
+                            <p>You're ready</p>
+                        </div>
+                        {#if youAreReady}
+                            <!-- To change state for unready -->
+                            <button id="declare-unready" on:click={redinessLess}>
+                                <Close size={24} fill="whitesmoke"/>
+                                <p>Back to unready</p>
+                            </button>
+                        {/if}
+                    {/if}
+                {:else if onlineGame.bothUserRedinness == 1}
+                    <!-- When one user is ready -->
+                    Start Game
+                {/if}
+            </button>
+            {#if youAreReady && !onlineGame.bothUserRedinness}
+                <!-- When no one user is ready -->
+                <div class="info-game">
+                    <div class="rot">
+                        <Rotate fill="whitesmoke" size={24}/>
+                    </div>
+                    <p>Waiting for other user...</p> <!-- TODO: Add text dot animation in svelte -->
+                </div>
+            {/if}
+        {/if}
+    </div>
+{/if}
 
 <style>
     * {
@@ -765,6 +791,22 @@
         color: white;
     }
     
+    .both-users-screen {
+        width: 100%;
+        height: 100%;
+        display: flex;
+    }
+
+    .both-users-screen > div {
+        width: 50%;
+        height: 100%;
+        position: relative;
+    }
+
+    .both-users-screen > div:first-of-type {
+        border-right: solid 2px orangered;
+    }
+
     @keyframes rotate {
         to {
             transform: rotate(360deg);
