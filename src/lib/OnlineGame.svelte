@@ -33,7 +33,7 @@
     };
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
-    const rc = new RTCPeerConnection(configuration);
+    let rc = new RTCPeerConnection(configuration);
     const so = io("http://localhost:8080");
     let dataChannel: { channel?: RTCDataChannel, listener: () => void, isOpen: boolean } = { // TODO: send message function with full online cover
         isOpen: false,
@@ -97,6 +97,26 @@
                     // When oponen of you whose is displaying button "Start game click on" 
                     case "game-started":
                         onlineGame.gameStatus = "started";
+                    break;
+
+                    // As name suggests is received when another competitor quit competition
+                    case "competitor-quit":
+                        // For user himself
+                        onlineGame.bothUserRedinness = 0;
+                        onlineGame.gameStatus = "not-initialized";
+                        onlineGame.connectionEstablished = false;
+                        onlineGame.adverseLoverProfile = { image_blob: '', name: '' };
+
+                        // Close WebRTC connection
+                        dataChannel.isOpen = false;
+                        dataChannel.channel?.close();
+                        rc.close();
+                        
+                        // Disconnect from signaling room
+                        so.emit("room", "disconnect", gameId);
+
+                        // Create online game again
+                        dsp("recreate");
                     break;
                 }
             })
@@ -225,6 +245,29 @@
         // Unchange rediness state
         youAreReady = false;
         communicationManager?.messages.send("rediness-state", { ready: false });
+    }
+
+    // As name suggests disconnect user with game
+    function disconnectWithGame() {
+        // For user himself
+        onlineGame.bothUserRedinness = 0;
+        onlineGame.gameStatus = "not-initialized";
+        onlineGame.connectionEstablished = false;
+        onlineGame.adverseLoverProfile = { image_blob: '', name: '' };
+
+        // For second user in game room
+        communicationManager?.messages.send("competitor-quit", {});
+
+        // End WebRTC connection
+        dataChannel.isOpen = false;
+        dataChannel.channel?.close()
+        rc.close();
+
+        // Disconnect from signaling room
+        so.emit("room", "disconnect", gameId);
+
+        // Create online game again
+        dsp("recreate");
     }
 
     // Svelte Action function
@@ -387,6 +430,9 @@
             </div>
         {/if}
         {#if onlineGame.connectionEstablished}
+            <button class="quit-competition" on:click={disconnectWithGame}>
+                Disconnect with game
+            </button>
             <!-- Button for erase in 'waiting room' or 'start game' -->
             <button class="determine-rediness" class:user-ready={youAreReady} class:start-game={onlineGame.bothUserRedinness == 1} on:click={rediness}>
                 {#if !onlineGame.bothUserRedinness}
@@ -660,6 +706,19 @@
         text-align: center;
         background-color: black;
         color: orangered;
+    }
+
+    button.quit-competition {
+        height: 35px;
+        width: 770px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgb(227, 85, 9);
+        border: solid 1px orangered;
+        border-radius: 4px;
+        color: whitesmoke;
+        font-size: 18px;
     }
 
     button.determine-rediness {

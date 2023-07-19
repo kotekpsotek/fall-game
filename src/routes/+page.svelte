@@ -179,7 +179,7 @@
     {:else if toDisplay.status == "scores list"}
         <ScoresList {scores} on:terminate={_ => toDisplay.changeStatus(null)}/>
     {:else if toDisplay.status == "online"}
-        <OnlineGame on:go-back={_ => toDisplay.changeStatus(null)}/>
+        <OnlineGame on:go-back={_ => toDisplay.changeStatus(null)} on:recreate={_ => { toDisplay.changeStatus(null); toDisplay.changeStatus("online") }}/>
     {:else if !toDisplay.status && !$gameEndScreenDisplaying}
         <div class="app-layout-menu">
             <div class="menu-enclosing">

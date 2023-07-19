@@ -20,7 +20,7 @@ interface OnlineGame {
 }
 
 type OnlineProfileData = OnlineGame["adverseLoverProfile"];
-type MessageTypes = "profile-data" | "no-aceptation" | "rediness-state" | "game-started";
+type MessageTypes = "profile-data" | "no-aceptation" | "rediness-state" | "game-started" | "competitor-quit";
 
 interface P2PCommunciationMessage<T> {
     type: MessageTypes,

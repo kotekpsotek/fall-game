@@ -32,6 +32,9 @@ wss.on("connection", socket => {
                     cb(srOffers);
                 }
             break;
+            case "disconnect":
+                socket.leave(roomId);
+            break;
         }
     })
 
