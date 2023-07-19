@@ -324,25 +324,43 @@
             {/if}
         </button>
     </div>
-    <div class="before-game">
-        <div class="game-id-top-notch">
-            <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p>
-        </div>
-        <div class="decision">
-            <div class="create">
-                <h2>Create game</h2>
-                <p class="game-id">{gameId}</p>
-                <button on:click={createGame}>Make new</button>
+    {#if !onlineGame.connectionEstablished}
+        <!-- To establish game connection -->
+        <div class="before-game">
+            <div class="game-id-top-notch">
+                <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p>
             </div>
-            <div class="join">
-                <h2>Join to game</h2>
-                <div class="inpt">
-                    <input type="text" id="game-id" placeholder="Game identifier">
-                    <button on:click={joinToGame}>Join to game</button>
+            <div class="decision">
+                <div class="create">
+                    <h2>Create game</h2>
+                    <p class="game-id">{gameId}</p>
+                    <button on:click={createGame}>Make new</button>
+                </div>
+                <div class="join">
+                    <h2>Join to game</h2>
+                    <div class="inpt">
+                        <input type="text" id="game-id" placeholder="Game identifier">
+                        <button on:click={joinToGame}>Join to game</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    {:else}
+        <!-- About user whose was joined -->
+        <div class="online-profile adverse-competitor">
+            <div id="profile-img">
+                {#if !onlineGame.adverseLoverProfile.image_blob}
+                    <UserAvatarFilledAlt size={52} fill="whitesmoke"/>
+                {:else}
+                    <img src="{onlineGame.adverseLoverProfile.image_blob}" alt="">
+                {/if}
+            </div>
+            <div class="name">
+                <p class="desc">Adverse User Name</p>
+                <p>{onlineGame.adverseLoverProfile.name || "No specified"}</p>
+            </div>
+        </div>
+    {/if}
     {#if onlineGame.connectionEstablished}
         <!-- Button for erase in 'waiting room' or 'start game' -->
         <button class="determine-rediness" class:user-ready={youAreReady} class:start-game={onlineGame.bothUserRedinness == 1} on:click={rediness}>
@@ -466,7 +484,11 @@
         position: relative;
     }
 
-    .online-profile > button#profile-img {
+    .online-profile.adverse-competitor {
+        border: solid 1px orangered;
+    }
+
+    .online-profile > :is(button, div)#profile-img {
         width: 35%;
         height: 100%;
         display: flex;
@@ -476,7 +498,11 @@
         border-right: 2px solid black;
     }
 
-    .online-profile > button#profile-img > img {
+    .online-profile.adverse-competitor div#profile-img {
+        border-color: orangered;
+    }
+
+    .online-profile > :is(button, div)#profile-img > img {
         width: 100%;
         height: 100%;
         object-fit: contain;
