@@ -8,6 +8,7 @@
     import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
     import OnlineNoAcceptation from "$lib/OnlineNoAcceptation.svelte";
     import OnlineGameBadge from "$lib/OnlineGameBadge.svelte";
+    import OnlineGameIdField from "$lib/OnlineGameIdField.svelte";
 
     const dsp = createEventDispatcher();
 
@@ -396,12 +397,14 @@
             <!-- To establish game connection -->
             <div class="before-game">
                 <div class="game-id-top-notch">
-                    <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p>
+                    <!-- <p>Game ID: <span class="game-id-emphasized">{gameId || "not specified"}</span></p> -->
+                    <p>Game ID:</p>
+                    <OnlineGameIdField gameIdentifier={gameId} additionalConf={{ leftMargin: true, pixel18FontSize: true }}/>
                 </div>
                 <div class="decision">
                     <div class="create">
                         <h2>Create game</h2>
-                        <p class="game-id">{gameId}</p>
+                        <OnlineGameIdField gameIdentifier={gameId} additionalConf={{}}/>
                         <button on:click={createGame}>Make new</button>
                     </div>
                     <div class="join">
