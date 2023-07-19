@@ -3,7 +3,7 @@
     import { writable } from "svelte/store";
     import { invoke } from "@tauri-apps/api";
     import { io } from "socket.io-client";
-    import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate } from "carbon-icons-svelte";
+    import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate, Close } from "carbon-icons-svelte";
     import { loadProfileData, saveProfileData, OnlineGameCommunication } from "$lib/api/online.game";
     import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
     import OnlineNoAcceptation from "$lib/OnlineNoAcceptation.svelte";
@@ -78,10 +78,19 @@
                         onlineGame.adverseLoverProfile = { image_blob: '', name: '' };
                     break;
 
-                    // Add rediness state about participation in game
+                    // Add rediness state from another user about participation in game
                     case "rediness-state":
-                        if (onlineGame.bothUserRedinness < 2) {
-                            onlineGame.bothUserRedinness += 1;
+                        {
+                            const { content: { ready } } = parsedData as P2PCommunciationMessage<{ ready: boolean }>
+
+                            if (ready) {
+                                if (onlineGame.bothUserRedinness < 2) {
+                                    onlineGame.bothUserRedinness += 1;
+                                }
+                            }
+                            else {
+                                onlineGame.bothUserRedinness >= 1 ? onlineGame.bothUserRedinness -= 1 : [];
+                            }
                         }
                     break;
                 }
@@ -189,11 +198,21 @@
         gameId = "";
     }
 
-    // Send rediness state
+    // Send ready rediness state
     let youAreReady = false;
     function rediness() {
         youAreReady = true;
-        communicationManager?.messages.send("rediness-state", {});
+        communicationManager?.messages.send("rediness-state", { ready: true });
+    }
+
+    // Send unready state about rediness
+    function redinessLess(ev: Event) {
+        // Stop event bubbling
+        ev.stopPropagation();
+
+        // Unchange rediness state
+        youAreReady = false;
+        communicationManager?.messages.send("rediness-state", { ready: false });
     }
 
     // Svelte Action function
@@ -326,17 +345,39 @@
     </div>
     {#if onlineGame.connectionEstablished}
         <!-- Button for erase in 'waiting room' or 'start game' -->
-        <button class="determine-rediness" on:click={rediness}>
+        <button class="determine-rediness" class:user-ready={youAreReady} class:start-game={onlineGame.bothUserRedinness == 1} on:click={rediness}>
             {#if !onlineGame.bothUserRedinness}
+                <!-- When no one user is ready -->
                 {#if !youAreReady}
+                    <!-- When user yourself isn't ready -->
                     Determine rediness
                 {:else}
-                    You're ready
+                    <!-- When user yourself isn ready -->
+                    <div class="ready-declaration">
+                        <p>You're ready</p>
+                    </div>
+                    {#if youAreReady}
+                        <!-- To change state for unready -->
+                        <button id="declare-unready" on:click={redinessLess}>
+                            <Close size={24} fill="whitesmoke"/>
+                            <p>Back to unready</p>
+                        </button>
+                    {/if}
                 {/if}
             {:else if onlineGame.bothUserRedinness == 1}
+                <!-- When one user is ready -->
                 Start Game
             {/if}
         </button>
+        {#if youAreReady && !onlineGame.bothUserRedinness}
+            <!-- When no one user is ready -->
+            <div class="info-game">
+                <div class="rot">
+                    <Rotate fill="whitesmoke" size={24}/>
+                </div>
+                <p>Waiting for other user...</p> <!-- TODO: Add text dot animation in svelte -->
+            </div>
+        {/if}
     {/if}
 </div>
 
@@ -571,8 +612,7 @@
 
     button.determine-rediness {
         height: 35px;
-        width: 750px;
-        padding: 10px;
+        width: 770px; /* 750px + 20px of padding from both sides (right and left side) */
         display: flex;        
         align-items: center;
         justify-content: center;
@@ -580,6 +620,57 @@
         border-radius: 4px;
         font-size: 18px;
         background-color: rgba(94, 211, 141, 0.902);
+        overflow: hidden;
+    }
+
+    button.determine-rediness.user-ready {
+        justify-content: space-between;
+    }
+
+    button.determine-rediness.user-ready > div.ready-declaration {
+        height: 100%;
+        width: calc(100% - 30%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    button.determine-rediness.user-ready > button#declare-unready {
+        height: 100%;
+        width: 30%;
+        padding: 10px;
+        background-color: red;
+        display: flex;
+        column-gap: 5px;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        color: whitesmoke;
+        border: solid 1px white;
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
+
+    button.determine-rediness.start-game {
+        justify-content: center !important;
+    } 
+
+    div.info-game {
+        width: 770px; /* 750px + 20px of padding from both sides (right and left side) */
+        height: 35px;
+        padding: 0px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        column-gap: 5px;
+        color: whitesmoke;
+        background-color: rgba(0, 0, 0, 0.5);
+        border: solid 1px whitesmoke;
+        border-radius: 4px;
+    }
+
+    div.info-game > div.rot {
+        animation: rotate forwards 500ms infinite linear;
     }
 
     div.back {
