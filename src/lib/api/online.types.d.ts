@@ -37,7 +37,11 @@ interface P2PCommunciationMessage<T> {
 interface OnlineCompetitorScreenHeart {
     timeMs: number,
     position: { x: number, y: number },
-    rotation: number
+    rotation: number,
+    userScreenData: {
+        width: number,
+        height: number
+    }
 }
 
 export type {

@@ -5,7 +5,7 @@
     import { io } from "socket.io-client";
     import { UserAvatarFilledAlt, Edit, EditOff, ArrowLeft, Rotate, Close } from "carbon-icons-svelte";
     import { loadProfileData, saveProfileData, OnlineGameCommunication } from "$lib/api/online.game";
-    import type { OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
+    import type { OnlineCompetitorScreenHeart, OnlineGame, OnlineProfileData, P2PCommunciationMessage } from "$lib/api/online.types.d";
     import OnlineNoAcceptation from "$lib/OnlineNoAcceptation.svelte";
     import OnlineGameBadge from "$lib/OnlineGameBadge.svelte";
     import OnlineGameIdField from "$lib/OnlineGameIdField.svelte";
@@ -120,6 +120,12 @@
 
                         // Create online game again
                         dsp("recreate");
+                    break;
+
+                    // When game start competitor will send his hearts cordinations
+                    case "competitor-game-payload":
+                        const onlineGamePayload = parsedData.content as OnlineCompetitorScreenHeart;
+                        onlineGame.competitorHearts.push(onlineGamePayload);
                     break;
                 }
             })
@@ -359,12 +365,12 @@
         <div class="you">
             <!-- Screen assigned to you as a user -->
             <OnlineGameBadge aboutUserDatas={onlineGame.userHimselfProfile} forUserGrade="you"/>
-            <InGame/>
+            <InGame onlineGame={true} onlineGameUserEntitle={"gamer"}/>
         </div>
         <div class="competition-member">
             <!-- Screen assigned to other competitor -->
             <OnlineGameBadge aboutUserDatas={onlineGame.adverseLoverProfile} forUserGrade="other"/>
-            <InGame/>
+            <InGame onlineGame={true} onlineGameUserEntitle={"receiver"} onlineCompetitorHeartsPosition={onlineGame.competitorHearts}/>
         </div>
     </div>
 {:else if onlineGame.gameStatus == "not-initialized"}

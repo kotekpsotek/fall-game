@@ -8,9 +8,13 @@
     import GameEndScreen from "$lib/GameEndScreen.svelte";
     import { PauseFuture, Continue, Close } from "carbon-icons-svelte";
     import type { OnlineCompetitorScreenHeart } from "./api/online.types";
+    import type { OnlineGameCommunication } from "./api/online.game";
 
     export let onlineGame: boolean = false;
+    export let onlineGameUserEntitle: "gamer" | "receiver";
     export let onlineCompetitorHeartsPosition: OnlineCompetitorScreenHeart[] = [];
+    /** When 'onlineGameUserEntitle' = "gamer" her value must be assigned */
+    export let communicationManager: OnlineGameCommunication | undefined = undefined;
     
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
@@ -20,36 +24,59 @@
 
     /** Add image with heart to screen */
     async function addHeart() {
-        // Attach time of spawning each heart to variable with whole set
-        if (heartsSpawned.length < limitHeartsSpawning) {
-            // Obtain position for heart paste
-            const [pos_width, pos_height] = (await invoke("get_coords")) as Array<number>;
+        if (!onlineGame || (onlineGame && onlineGameUserEntitle == "gamer")) { // When user doesn't play in online mode or play with but his gamer status is "gamer"
+            // Attach time of spawning each heart to variable with whole set
+            if (heartsSpawned.length < limitHeartsSpawning) {
+                // Obtain position for heart paste
+                const [pos_width, pos_height] = (await invoke("get_coords")) as Array<number>;
+                
+                // Add position of heart to view
+                const image = new Image(75, 75);
+                image.src = "/heart.png";
+                image.style.position = "absolute";
+                image.style.top = pos_height + "px"; 
+                image.style.right = pos_width + "px";
+                image.style.zIndex = "10";
+                gameContext.appendChild(image);
+    
+                // Add rotation to image
+                const rotateDegrees = await invoke("get_rotation_degrees");
+                const plusMinus = Math.floor(Math.random() * 2);
+                const characterPlusMinus = plusMinus == 1 ? "" : "-";
+                image.style.transform = `rotate(${characterPlusMinus}${rotateDegrees}deg)`;
+                
+                // Add new heart to records of hearts lisy
+                const timeMs = Date.now();
+                const objSpwnd = { timeMs, image };
+                heartsSpawned.push(objSpwnd);
+    
+                // Capture click on spawned heart on Screen
+                image.onclick = clickOnHeart(heartsSpawned.length - 1);
+    
+                // Online Game Mode: Send hearts to another user
+                if (onlineGame) {
+                    const payload = {
+                        timeMs, 
+                        position: { 
+                            x: pos_width,
+                            y: pos_height
+                        },
+                        rotation: Number(characterPlusMinus),
+                        userScreenData: {
+                            width: document.body.clientWidth,
+                            height: document.body.clientHeight
+                        }
+                    } satisfies OnlineCompetitorScreenHeart;
+                    communicationManager?.messages.send("competitor-game-payload", payload)
+                }
+            }
+            else {
+                // Emit event due to rich maximum hearts amount on screen
+                const ev = new Event("hearts-overflow-met");
+                window.dispatchEvent(ev);
+            }
+        } else { // When user is playing in online game and his status is "receiver"
             
-            // Add position of heart to view
-            const image = new Image(75, 75);
-            image.src = "/heart.png";
-            image.style.position = "absolute";
-            image.style.top = pos_height + "px"; 
-            image.style.right = pos_width + "px";
-            image.style.zIndex = "10";
-            gameContext.appendChild(image);
-
-            // Add rotation to image
-            const rotateDegrees = await invoke("get_rotation_degrees");
-            const plusMinus = Math.floor(Math.random() * 2);
-            image.style.transform = `rotate(${plusMinus == 1 ? "" : "-"}${rotateDegrees}deg)`;
-            
-            // Add new heart to records of hearts lisy
-            const objSpwnd = { timeMs: Date.now(), image };
-            heartsSpawned.push(objSpwnd);
-
-            // Capture click on spawned heart on Screen
-            image.onclick = clickOnHeart(heartsSpawned.length - 1);
-        }
-        else {
-            // Emit event due to rich maximum hearts amount on screen
-            const ev = new Event("hearts-overflow-met");
-            window.dispatchEvent(ev);
         }
     }
 
