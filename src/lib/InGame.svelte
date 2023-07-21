@@ -7,7 +7,11 @@
     import PointsBadge from "./PointsBadge.svelte";
     import GameEndScreen from "$lib/GameEndScreen.svelte";
     import { PauseFuture, Continue, Close } from "carbon-icons-svelte";
+    import type { OnlineCompetitorScreenHeart } from "./api/online.types";
 
+    export let onlineGame: boolean = false;
+    export let onlineCompetitorHeartsPosition: OnlineCompetitorScreenHeart[] = [];
+    
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
 

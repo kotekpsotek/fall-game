@@ -9,6 +9,7 @@
     import OnlineNoAcceptation from "$lib/OnlineNoAcceptation.svelte";
     import OnlineGameBadge from "$lib/OnlineGameBadge.svelte";
     import OnlineGameIdField from "$lib/OnlineGameIdField.svelte";
+    import InGame from "$lib/InGame.svelte";
 
     const dsp = createEventDispatcher();
 
@@ -30,7 +31,8 @@
         },
         connectionEstablished: false,
         bothUserRedinness: 0,
-        gameStatus: "not-initialized"
+        gameStatus: "not-initialized",
+        competitorHearts: []
     };
 
     const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -357,10 +359,12 @@
         <div class="you">
             <!-- Screen assigned to you as a user -->
             <OnlineGameBadge aboutUserDatas={onlineGame.userHimselfProfile} forUserGrade="you"/>
+            <InGame/>
         </div>
         <div class="competition-member">
             <!-- Screen assigned to other competitor -->
             <OnlineGameBadge aboutUserDatas={onlineGame.adverseLoverProfile} forUserGrade="other"/>
+            <InGame/>
         </div>
     </div>
 {:else if onlineGame.gameStatus == "not-initialized"}

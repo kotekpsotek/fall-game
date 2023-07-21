@@ -16,20 +16,34 @@ interface OnlineGame {
     /**
      * @description Describe actual game status: not-initialized - means game hasn't been started, started - that game has been started, paused - that game was paused by one from users
     */
-    gameStatus: "not-initialized" | "started" | "paused"
+    gameStatus: "not-initialized" | "started" | "paused",
+    /**
+     * @description List with all hearts from competitor screen
+    */
+    competitorHearts: OnlineCompetitorScreenHeart[]
 }
 
 type OnlineProfileData = OnlineGame["adverseLoverProfile"];
-type MessageTypes = "profile-data" | "no-aceptation" | "rediness-state" | "game-started" | "competitor-quit";
+type MessageTypes = "profile-data" | "no-aceptation" | "rediness-state" | "game-started" | "competitor-quit" | "competitor-game-payload";
 
 interface P2PCommunciationMessage<T> {
     type: MessageTypes,
     content: T
 }
 
+/**
+ * @description Represent one heart from user competitor screen
+*/
+interface OnlineCompetitorScreenHeart {
+    timeMs: number,
+    position: { x: number, y: number },
+    rotation: number
+}
+
 export type {
     OnlineGame,
     OnlineProfileData,
     MessageTypes,
-    P2PCommunciationMessage
+    P2PCommunciationMessage,
+    OnlineCompetitorScreenHeart
 }
