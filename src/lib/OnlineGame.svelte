@@ -126,7 +126,15 @@
                     case "competitor-game-payload":
                         const onlineGamePayload = parsedData.content as OnlineCompetitorScreenHeart;
                         onlineGame.competitorHearts.push(onlineGamePayload);
-                        // console.log("Game data received: ", onlineGamePayload);
+
+                        // Inject reactivity to svelte capture mechanism
+                        onlineGame.competitorHearts = onlineGame.competitorHearts;
+                    break;
+
+                    // Receive pause description
+                    case "game-paused":
+                        window.dispatchEvent(new Event("pause-online"));
+                        console.log("Pause received")
                     break;
                 }
             })

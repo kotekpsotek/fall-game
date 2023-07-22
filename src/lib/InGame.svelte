@@ -83,7 +83,6 @@
                 window.dispatchEvent(ev);
             }
         } else { // When user is playing in online game and his status is "receiver"
-            // TODO: Add taking into account difference between screen dimensions
             // Online Game add heart from antoher user
             const { position: { x, y }, rotation, userScreenData: { width, height } } = onlineCompetitorHeartsPosition[onlineCompetitorHeartsPosition.length - 1];
             const { width: myWidth, height: myHeight } = componentDimension;
@@ -129,11 +128,20 @@
     // When application was mounted
     let gameEnded = false;
     let paused = false;
+    let pausedOnline = false;
 
     /** @description When user click on Pause/Resume button */
     function pauseResume() {
         paused = !paused;
-        document.dispatchEvent(new Event("paused"))
+
+        if (!onlineGame || onlineGameUserEntitle == "gamer") {
+            document.dispatchEvent(new Event("paused"));
+        }
+
+        // While you entitled as gamer paused game 
+        if (onlineGame && onlineGameUserEntitle == "gamer") {
+            communicationManager?.messages.send("game-paused", {});
+        }
     }
 
     // When user click one time keyborad key
@@ -145,6 +153,10 @@
     // Listen for Initialize Pause from outside (regards to this component) snippest calls
     window.addEventListener("pause-init-outside", () => {
         pauseResume();
+    });
+
+    window.addEventListener("pause-online", () => {
+        pausedOnline = !pausedOnline;
     });
 
     onMount(async () => {
@@ -249,7 +261,6 @@
 
     // Add new heart to screen when 'length' property from "onlineCompetitorHeartsPosition" is changed and when InGame instance should paste another user hearts
     $: if (onlineGame && onlineGameUserEntitle == "receiver" && onlineCompetitorHeartsPosition.length) {
-        console.log("1")
         addHeart();
     }
 </script>
@@ -258,7 +269,7 @@
     <PointsBadge {userPoints}/>
 {/if}
 {#if onlineGameUserEntitle != "receiver"}
-    <button id="pause" on:click={pauseResume}>
+    <button id="pause" on:click={pauseResume} class:online-version={onlineGame}>
         {#if paused}
             <Continue size={24} fill="white"/>
         {:else}
@@ -269,7 +280,8 @@
 <div class="in-game" bind:this="{gameContext}" bind:clientHeight={componentDimension.height} bind:clientWidth={componentDimension.width}></div>
 
 <!-- Whether game should be paused -->
-{#if paused}
+{#if paused && (!onlineGame || onlineGameUserEntitle == "gamer")}
+    <!-- Pause menu for offline game or user with 'gamer' status in online game -->
     <div class="intermission-screen">
         <!-- Class 'back' is only for preserve css styles for this class -->
         <h2 class="paused-description front" class:back={1 == Math.random() - 1}>Paused</h2>
@@ -277,6 +289,14 @@
             <button on:click={_ => window.dispatchEvent(new Event("end"))} title="End game">
                 <Close size={28} fill="white"/>
             </button>
+        </div>
+    </div>
+{:else if pausedOnline && onlineGame && onlineGameUserEntitle == "receiver"}
+    <!-- For online game with user with other status then 'gamer' like receiver -->
+    <div class="surrounding">
+        <div class="competitor-paused">
+            <h2>Your competitor paused game!</h2>
+            <p>Waiting for game resumption...</p>
         </div>
     </div>
 {/if}
@@ -306,12 +326,15 @@
         z-index: 11;
     }
 
+    button#pause.online-version {
+        top: 55px;
+    }
+
     .intermission-screen {
         width: 100vw;
         height: 100vh;
         position: absolute;
         top: 0px;
-        right: 0px;
         background-color: rgba(0, 0, 0, 0.7);
         display: flex;
         flex-direction: column;
@@ -346,6 +369,31 @@
     
     h2.back {
         animation: scale-from 500ms linear forwards normal;
+    }
+
+    div.surrounding {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 11;
+    }
+
+    div.competitor-paused {
+        width: 300px;
+        height: 150px;
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        row-gap: 15px;
+        background-color: aquamarine;
+        border: solid 1px whitesmoke;
+        border-radius: 4px;
     }
 
     @keyframes scale-to {

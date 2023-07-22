@@ -44,6 +44,7 @@
         justify-content: flex-start;
         column-gap: 5px;
         cursor: none;
+        z-index: 25;
     }
 
     .online-game-badge.you {
