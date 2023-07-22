@@ -15,6 +15,10 @@
     export let onlineCompetitorHeartsPosition: OnlineCompetitorScreenHeart[] = [];
     /** When 'onlineGameUserEntitle' = "gamer" her value must be assigned */
     export let communicationManager: OnlineGameCommunication | undefined = undefined;
+    /** @description Some check rules for online game export properties */
+    if (onlineGame) {
+        if (onlineGameUserEntitle == "gamer" && !communicationManager) throw Error("communication manager did not enclosed but is required!")
+    }
     
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
@@ -24,6 +28,11 @@
 
     /** Add image with heart to screen */
     async function addHeart() {
+        const image = new Image(75, 75);
+        image.src = "/heart.png";
+        image.style.position = "absolute";
+        image.style.zIndex = "10";
+        
         if (!onlineGame || (onlineGame && onlineGameUserEntitle == "gamer")) { // When user doesn't play in online mode or play with but his gamer status is "gamer"
             // Attach time of spawning each heart to variable with whole set
             if (heartsSpawned.length < limitHeartsSpawning) {
@@ -31,12 +40,8 @@
                 const [pos_width, pos_height] = (await invoke("get_coords")) as Array<number>;
                 
                 // Add position of heart to view
-                const image = new Image(75, 75);
-                image.src = "/heart.png";
-                image.style.position = "absolute";
                 image.style.top = pos_height + "px"; 
                 image.style.right = pos_width + "px";
-                image.style.zIndex = "10";
                 gameContext.appendChild(image);
     
                 // Add rotation to image
@@ -76,7 +81,17 @@
                 window.dispatchEvent(ev);
             }
         } else { // When user is playing in online game and his status is "receiver"
-            
+            // TODO: Add taking into account difference between screen dimensions
+            // Online Game add heart from antoher user
+            const { position: { x, y }, rotation } = onlineCompetitorHeartsPosition[onlineCompetitorHeartsPosition.length - 1];
+
+            // Add position of heart to view
+            image.style.top = y + "px"; 
+            image.style.right = x + "px";
+            gameContext.appendChild(image);
+
+            // Add rotation to image
+            image.style.transform = `rotate(${rotation}deg)`;
         }
     }
 

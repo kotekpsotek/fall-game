@@ -365,7 +365,7 @@
         <div class="you">
             <!-- Screen assigned to you as a user -->
             <OnlineGameBadge aboutUserDatas={onlineGame.userHimselfProfile} forUserGrade="you"/>
-            <InGame onlineGame={true} onlineGameUserEntitle={"gamer"}/>
+            <InGame onlineGame={true} onlineGameUserEntitle={"gamer"} communicationManager={communicationManager}/>
         </div>
         <div class="competition-member">
             <!-- Screen assigned to other competitor -->
