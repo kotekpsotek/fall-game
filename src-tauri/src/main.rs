@@ -13,7 +13,8 @@ mod types;
 mod commands_src;
 
 /** Safe border for spawn hearts into user screen view */
-const SAFE_BORDER_SIZE: u16 = 300;
+const SAFE_BORDER_SIZE: u16 = 50;
+const SAFE_BORDER_SIZE_ONLINE: u16 = SAFE_BORDER_SIZE / 2;
 
 /// Command cannot have any not snake case paramaters
 #[tauri::command]
@@ -22,13 +23,33 @@ fn hello_to_you(nameSnakeCase: &str) -> String {
 }
 
 #[tauri::command]
-fn get_coords(window: tauri::Window) -> (u32, u32) {
-  let tauri::PhysicalSize { width, height } = window.inner_size()
-    .unwrap();
-  let width_rnd = thread_rng().gen_range(0..(width - SAFE_BORDER_SIZE as u32));
-  let height_rnd = thread_rng().gen_range(0..(height - SAFE_BORDER_SIZE as u32));
+fn get_coords(dimensions: types::ComponentDimensions, online: bool) -> (u32, u32) {
+  enum RangeType {
+    Width,
+    Height
+  }
 
-  (width_rnd, height_rnd)
+  impl RangeType {
+    fn range(self, online: bool, dimensions: &types::ComponentDimensions) -> std::ops::Range<u16> {
+      match self {
+        RangeType::Width => if online {
+          return 0..(dimensions.width - SAFE_BORDER_SIZE_ONLINE);
+        } else {
+          return 0..(dimensions.width - SAFE_BORDER_SIZE)
+        },
+        RangeType::Height => if online {
+          return 0..(dimensions.height - SAFE_BORDER_SIZE_ONLINE);
+        } else {
+          return 0..(dimensions.height - SAFE_BORDER_SIZE)
+        }
+      }
+    }
+  }
+
+  let width_rnd = thread_rng().gen_range(RangeType::Width.range(online, &dimensions));
+  let height_rnd = thread_rng().gen_range(RangeType::Height.range(online, &dimensions));
+
+  (width_rnd as u32, height_rnd as u32)
 }
 
 #[tauri::command]

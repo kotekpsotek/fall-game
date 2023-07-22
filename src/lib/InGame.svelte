@@ -22,6 +22,7 @@
     
     const disp = createEventDispatcher();
     let gameContext: HTMLDivElement;
+    let componentDimension = { width: 0, height: 0 };
 
     interface SpawnedHeart { timeMs: number, image: HTMLImageElement }
     let heartsSpawned: SpawnedHeart[] = [];
@@ -37,7 +38,7 @@
             // Attach time of spawning each heart to variable with whole set
             if (heartsSpawned.length < limitHeartsSpawning) {
                 // Obtain position for heart paste
-                const [pos_width, pos_height] = (await invoke("get_coords")) as Array<number>;
+                const [pos_width, pos_height] = (await invoke("get_coords", { dimensions: componentDimension, online: onlineGame })) as Array<number>;
                 
                 // Add position of heart to view
                 image.style.top = pos_height + "px"; 
@@ -261,7 +262,7 @@
         {/if}
     </button>
 {/if}
-<div class="in-game" bind:this="{gameContext}"></div>
+<div class="in-game" bind:this="{gameContext}" bind:clientHeight={componentDimension.height} bind:clientWidth={componentDimension.width}></div>
 
 <!-- Whether game should be paused -->
 {#if paused}
@@ -278,9 +279,9 @@
 
 <style>
     .in-game {
-        width: 150vw;
-        height: 150vh;
-        overflow: auto;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
     }
 
     button#pause {

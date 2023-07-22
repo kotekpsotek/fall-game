@@ -7,6 +7,12 @@ pub struct GameRecord {
     pub points: u32    
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct ComponentDimensions {
+  pub width: u16,
+  pub height: u16
+}
+
 #[derive(Default, Serialize, Deserialize)]
 pub struct Games {
     pub records: Vec<GameRecord>
