@@ -237,20 +237,30 @@
         });
 
         // Spawn initial interval
-        addInt();
+        if (!onlineGame || (onlineGame && onlineGameUserEntitle == "gamer")) {
+            // Only for user not playing in online game or when play but his online game status is "gamer"
+            addInt();
+        }
     });
+
+    // Add new heart to screen when 'length' property from "onlineCompetitorHeartsPosition" is changed and when InGame instance should paste another user hearts
+    $: if (onlineGame && onlineGameUserEntitle == "receiver" && onlineCompetitorHeartsPosition.length) {
+        addHeart();
+    }
 </script>
 
-{#if !gameEnded}
+{#if !gameEnded && !onlineGame}
     <PointsBadge {userPoints}/>
 {/if}
-<button id="pause" on:click={pauseResume}>
-    {#if paused}
-        <Continue size={24} fill="white"/>
-    {:else}
-        <PauseFuture size={24} fill="white"/>
-    {/if}
-</button>
+{#if onlineGameUserEntitle != "receiver"}
+    <button id="pause" on:click={pauseResume}>
+        {#if paused}
+            <Continue size={24} fill="white"/>
+        {:else}
+            <PauseFuture size={24} fill="white"/>
+        {/if}
+    </button>
+{/if}
 <div class="in-game" bind:this="{gameContext}"></div>
 
 <!-- Whether game should be paused -->

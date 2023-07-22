@@ -126,6 +126,7 @@
                     case "competitor-game-payload":
                         const onlineGamePayload = parsedData.content as OnlineCompetitorScreenHeart;
                         onlineGame.competitorHearts.push(onlineGamePayload);
+                        // console.log("Game data received: ", onlineGamePayload);
                     break;
                 }
             })
