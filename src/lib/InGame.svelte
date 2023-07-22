@@ -9,6 +9,7 @@
     import { PauseFuture, Continue, Close } from "carbon-icons-svelte";
     import type { OnlineCompetitorScreenHeart } from "./api/online.types";
     import type { OnlineGameCommunication } from "./api/online.game";
+    import { applyToDifferenceInDimensions } from "$lib/api/online.game";
 
     export let onlineGame: boolean = false;
     export let onlineGameUserEntitle: "gamer" | "receiver";
@@ -84,11 +85,13 @@
         } else { // When user is playing in online game and his status is "receiver"
             // TODO: Add taking into account difference between screen dimensions
             // Online Game add heart from antoher user
-            const { position: { x, y }, rotation } = onlineCompetitorHeartsPosition[onlineCompetitorHeartsPosition.length - 1];
+            const { position: { x, y }, rotation, userScreenData: { width, height } } = onlineCompetitorHeartsPosition[onlineCompetitorHeartsPosition.length - 1];
+            const { width: myWidth, height: myHeight } = componentDimension;
+            const { x: res_x, y: res_y } = applyToDifferenceInDimensions({ x, y }, { width, height, myWidth, myHeight });
 
             // Add position of heart to view
-            image.style.top = y + "px"; 
-            image.style.right = x + "px";
+            image.style.top = res_y + "px"; 
+            image.style.right = res_x + "px";
             gameContext.appendChild(image);
 
             // Add rotation to image
@@ -246,6 +249,7 @@
 
     // Add new heart to screen when 'length' property from "onlineCompetitorHeartsPosition" is changed and when InGame instance should paste another user hearts
     $: if (onlineGame && onlineGameUserEntitle == "receiver" && onlineCompetitorHeartsPosition.length) {
+        console.log("1")
         addHeart();
     }
 </script>

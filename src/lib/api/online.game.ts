@@ -74,3 +74,36 @@ export class OnlineGameCommunication {
         }) */
     }
 }
+
+/**
+ * @description Make rescaling for spawned heart on diffrent screens
+ * @param spawningPos 
+ * @param dimensions 
+ * @returns {{ x: number, y: number }}
+ */
+export function applyToDifferenceInDimensions(spawningPos: { x: number, y: number }, dimensions: { width: number, height: number, myWidth: number, myHeight: number }): { x: number, y: number } {
+    const { width, height, myWidth, myHeight } = dimensions;
+    
+    // No calculation is needed -> Because difference in screen dimensions doesn't occur and posission does not overflow over screen dimenssion
+    if (width == myWidth && height == myHeight && (spawningPos.x <= dimensions.width && spawningPos.y <= dimensions.height)) {
+        return spawningPos;
+    };
+
+    // When some from spawning posissions is heighter then user screen dimensions, so hereby switch will be performing to maximum dimension value in examined axis
+    if (spawningPos.x > dimensions.width) {
+        spawningPos.x = dimensions.width;
+    }
+
+    if (spawningPos.y > dimensions.height) {
+        spawningPos.y = dimensions.height;
+    }
+
+    // Calculation is needed -> Because difference in screens dimensions exist
+    const oneMyPercent = { per_w: myWidth / 100, per_h: myHeight / 100 };
+    const oneCompPercent = { per_w: width / 100, per_h: height / 100 };
+    const compSpawnPosIsHisPer = { spwn_w_per: spawningPos.x / oneCompPercent.per_w, spwn_h_per: spawningPos.y / oneCompPercent.per_h };
+    const toMyDimension = { x: compSpawnPosIsHisPer.spwn_w_per * oneMyPercent.per_w, y: compSpawnPosIsHisPer.spwn_h_per * oneMyPercent.per_h };
+
+    // Return result
+    return toMyDimension;
+}
