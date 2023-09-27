@@ -15,7 +15,7 @@ Game about fall in hearts 💗💗💗. Click on them to gain extra points 🎉.
 
 
 ## Made with help of:
-> Tauri + Rust + Svelte + Spotify API
+> Tauri + Rust + Svelte + Spotify API (I made integration creating pick music UI -> utilizing existing spotify api)
 
 # License
 Project is maintained under rights of [**MIT license**](./LICENSE)
